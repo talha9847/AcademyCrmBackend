@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 const seedDefaultUser = require("./seeds/seedDefaultUser"); // imports the function
 
 // Create Express app
@@ -13,6 +14,7 @@ app.use(express.json());
 seedDefaultUser();
 
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
