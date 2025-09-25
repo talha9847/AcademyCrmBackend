@@ -42,7 +42,7 @@ class UserRepository {
       await client.query("INSERT INTO student_fees(student_id,total_fee,due_date,discount,description) VALUES($1,$2,$3,$4,$5) RETURNING *", [studentId, totalFee, dueDate, discount, description]);
       await client.query("INSERT INTO parents(student_id,full_name,phone,email,relation,occupation,address) VALUES($1,$2,$3,$4,$5,$6,$7)", [studentId, p_name, p_phone, p_email, p_relation, p_occupation, p_address])
       await client.query('COMMIT');
-      return { fullName, email ,studentId}
+      return { fullName, email}
     } catch (error) {
       await client.query('ROLLBACK');
       console.error("Transaction failed:", error);
