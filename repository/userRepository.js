@@ -42,7 +42,7 @@ class UserRepository {
       await client.query("INSERT INTO student_fees(student_id,total_fee,due_date,discount,description) VALUES($1,$2,$3,$4,$5) RETURNING *", [studentId, totalFee, dueDate, discount, description]);
       await client.query("INSERT INTO parents(student_id,full_name,phone,email,relation,occupation,address) VALUES($1,$2,$3,$4,$5,$6,$7)", [studentId, p_name, p_phone, p_email, p_relation, p_occupation, p_address])
       await client.query('COMMIT');
-      return { fullName, email}
+      return { fullName, email }
     } catch (error) {
       await client.query('ROLLBACK');
       console.error("Transaction failed:", error);
@@ -72,32 +72,23 @@ class UserRepository {
   }
 
   async login(email, password) {
+
     const result = pool.query("SELECT * FROM users WHERE email=$1", [email]);
     const user = (await result).rows[0];
     if (!user) {
       return null;
     }
 
-    const isMatch = bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return null;
     }
 
-    const token = jwt.sign(
-      {
-        userid: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
-    );
     return {
       id: user.id,
       email: user.email,
       fullName: user.full_name,
       role: user.role,
-      token,
     };
   }
 }

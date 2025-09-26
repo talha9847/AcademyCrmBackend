@@ -28,8 +28,6 @@ async function createTeacher(req, res) {
 async function createStudent(req, res) {
     const { fullName, email, classId, sectionId, admissionNumber, dob, gender, rollNo, sessionId, address, totalFee, dueDate, discount, description, p_name, p_phone, p_email, p_relation, p_occupation, p_address } = req.body;
 
-    console.log(totalFee+"           lkdfjlksjflksdjlkfjdlksfjlkdsjfoiewfoijf idsjfj lkdsjoieifjoaj")
-
     const result = await userRepository.CreateStudent(fullName, email, classId, sectionId, admissionNumber, dob, gender, rollNo, sessionId, address, totalFee, dueDate, discount, description, p_name, p_phone, p_email, p_relation, p_occupation, p_address);
 
     if (!result) {
