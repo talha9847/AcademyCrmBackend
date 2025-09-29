@@ -11,7 +11,6 @@ class slugRepository {
             return result.rows;
         } catch (error) {
             console.log(error);
-            // Consider throwing the error to be handled upstream
             throw error;
         }
     }

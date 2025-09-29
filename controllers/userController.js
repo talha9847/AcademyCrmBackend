@@ -1,3 +1,4 @@
+const { getAllClasses } = require('../repository/extraRepository');
 const userRepository = require('../repository/userRepository');
 
 async function GetAllTeachers(req, res) {
@@ -39,6 +40,7 @@ async function createStudent(req, res) {
         success: true
     })
 }
+
 
 
 module.exports = { GetAllTeachers, GetAllStudents, createTeacher, createStudent };

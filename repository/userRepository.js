@@ -25,7 +25,7 @@ class UserRepository {
   }
 
   async GetAllStudents() {
-    const result = await pool.query("SELECT email,full_name FROM users WHERE role='student'");
+    const result = await pool.query("SELECT u.id,u.full_name,u.email,s.gender,c.name FROM users u JOIN students s ON u.id=s.user_id LEFT JOIN classes c ON s.class_id=c.id WHERE role='student' ORDER BY u.created_at ASC");
     return result.rows;
   }
 
@@ -51,6 +51,8 @@ class UserRepository {
       client.release();
     }
   }
+
+
 
   async CreateTeacher(fullName, email, hireDate, department) {
     const client = await pool.connect();

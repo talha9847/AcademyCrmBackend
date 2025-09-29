@@ -3,6 +3,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const slugRoutes = require('./routes/slugRoutes');
+const extraRoutes = require('./routes/extraRoutes');
 const seedDefaultUser = require("./seeds/seedDefaultUser");
 const cookieParser = require('cookie-parser');
 
@@ -24,6 +25,7 @@ seedDefaultUser();
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/user", slugRoutes);
+app.use("/api/extras", extraRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
