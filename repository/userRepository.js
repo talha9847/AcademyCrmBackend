@@ -19,10 +19,6 @@ class UserRepository {
     return result.rows[0];
   }
 
-  async GetAllTeachers() {
-    const result = await pool.query("SELECT email, full_name FROM users WHERE role='teacher'");
-    return result.rows;
-  }
 
   async GetAllStudents() {
     const result = await pool.query("SELECT u.id,u.full_name,u.email,s.gender,c.name FROM users u JOIN students s ON u.id=s.user_id LEFT JOIN classes c ON s.class_id=c.id WHERE role='student' ORDER BY u.created_at ASC");
@@ -52,6 +48,44 @@ class UserRepository {
     }
   }
 
+  async getStudentById(id) {
+    try {
+      const result = await pool.query(
+        `SELECT 
+         u.id AS user_id,
+         u.full_name AS student_name,
+         u.email AS student_email,
+         s.gender,
+         s.admission_number,
+         s.date_of_birth,
+         s.roll_no,
+         s.address AS student_address,
+         c.name AS class_name,
+         sc.name AS section_name,
+         ss.timing AS session_timing,
+         p.full_name AS parent_name,
+         p.phone AS parent_phone,
+         p.email AS parent_email,
+         p.relation AS parent_relation,
+         p.occupation AS parent_occupation,
+         p.address AS parent_address
+       FROM users u
+       JOIN students s ON u.id = s.user_id
+       LEFT JOIN classes c ON s.class_id = c.id
+       LEFT JOIN sections sc ON s.section_id = sc.id
+       LEFT JOIN sessions ss ON s.session_id = ss.id
+       LEFT JOIN parents p ON p.student_id = s.id
+       WHERE u.id = $1
+       ORDER BY u.created_at ASC
+       LIMIT 1`,
+        [id]
+      );
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching student by ID:', error);
+      throw error;
+    }
+  }
 
 
   async CreateTeacher(fullName, email, hireDate, department) {
@@ -70,6 +104,19 @@ class UserRepository {
       return null;
     } finally {
       client.release();
+    }
+  }
+
+  async getAllTeachers() {
+    try {
+      const result = await pool.query(`SELECT u.id,u.email,u.full_name,t.department,t.gender FROM USERS u
+              LEFT JOIN teachers t 
+              ON t.user_id=u.id
+              WHERE u.role='teacher'`)
+      return result.rows;
+    } catch (error) {
+      console.log(error)
+      throw error;
     }
   }
 

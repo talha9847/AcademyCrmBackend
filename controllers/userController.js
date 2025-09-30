@@ -1,13 +1,7 @@
 const { getAllClasses } = require('../repository/extraRepository');
 const userRepository = require('../repository/userRepository');
 
-async function GetAllTeachers(req, res) {
-    const result = await userRepository.GetAllTeachers();
-    if (!result) {
-        return res.status(401).json({ message: "Teachers not found" });
-    }
-    return res.json({ result: result, message: "Teachers found successfully" });
-}
+
 
 async function GetAllStudents(req, res) {
     const result = await userRepository.GetAllStudents();
@@ -41,6 +35,21 @@ async function createStudent(req, res) {
     })
 }
 
+async function getAllTeachers(req, res) {
+    const result = await userRepository.getAllTeachers();
+    if (!result) {
+        return res.status(500).json({ message: "There is something wrong" });
+    }
+    return res.status(200).json({ data: result })
+}
 
+async function getStudentById(req, res) {
+    const { id } = req.query;
+    const result = await userRepository.getStudentById(id);
+    if (!result) {
+        return res.status(500).json({ message: "There is something not good" });
+    }
+    return res.status(200).json({ data: result });
+}
 
-module.exports = { GetAllTeachers, GetAllStudents, createTeacher, createStudent };
+module.exports = {  GetAllStudents, createTeacher, createStudent, getStudentById, getAllTeachers };

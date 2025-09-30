@@ -10,8 +10,6 @@ INSERT INTO classes (id, name) VALUES
 (4, 'CLASS 12');
 
 
-
-
 CREATE TABLE fee_payments (
     id SERIAL PRIMARY KEY,
     student_id INTEGER,
@@ -25,7 +23,7 @@ CREATE TABLE fee_payments (
     FOREIGN KEY (student_fee_id) REFERENCES student_fees(id) ON DELETE CASCADE
 );
 
-
+INSERT INTO fee_payments (student_id, student_fee_id,amount_paid,payment_method) VALUES (7,5,5000.00,'Cash');
 
 CREATE TABLE pages (
     id SERIAL PRIMARY KEY,
@@ -158,6 +156,7 @@ CREATE TABLE teachers (
     user_id INTEGER,
     hire_date DATE,
     department VARCHAR(50),
+    gender VARCHAR(10),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
