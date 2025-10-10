@@ -20,6 +20,7 @@ class ExtraRepository {
             throw error;
         }
     }
+
     async getAllSections() {
         try {
             const result = await pool.query('SELECT c.id AS class_id, c.name AS class_name,s.id AS section_id,s.name AS section_name FROM classes c LEFT JOIN sections s ON c.id = s.class_id ORDER BY c.id, s.name;');
@@ -47,6 +48,16 @@ class ExtraRepository {
 
 
             return Object.values(tree);
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    async getSectionById(id) {
+        try {
+            const result = await pool.query("SELECT id,name FROM sections WHERE class_id=$1", [id])
+            return result.rows;
         } catch (error) {
             console.log(error);
             throw error;

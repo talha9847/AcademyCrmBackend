@@ -21,5 +21,13 @@ async function getAllSections(req, res) {
     }
     return res.status(200).json({ data: result });
 }
+async function getSectionById(req, res) {
+    const id = req.query.id;
+    const result = await extraRepository.getSectionById(id);
+    if (!result) {
+        return res.status(500).json({ message: "There is some erorr occured" });
+    }
+    return res.status(200).json({ data: result })
+}
 
-module.exports = { getAllClasses, getAllSessions, getAllSections }
+module.exports = { getAllClasses, getAllSessions, getAllSections, getSectionById }

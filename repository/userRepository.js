@@ -29,6 +29,12 @@ class UserRepository {
     const client = await pool.connect();
 
     try {
+      const checkResult = await pool.query("SELECT 1 FROM users WHERE email = $1", [email]);
+
+      if (checkResult.rowCount > 0) {
+        return { success: false, message: "Email already exists" };
+      }
+
       await client.query('BEGIN');
       let password = await bcrypt.hash('Student@123', 10);
       const result = await client.query("INSERT INTO users(full_name,email,role,password) VALUES ($1,$2,$3,$4) RETURNING *", [fullName, email, 'student', password]);
@@ -37,8 +43,9 @@ class UserRepository {
       let studentId = student.rows[0].id;
       await client.query("INSERT INTO student_fees(student_id,total_fee,due_date,discount,description) VALUES($1,$2,$3,$4,$5) RETURNING *", [studentId, totalFee, dueDate, discount, description]);
       await client.query("INSERT INTO parents(student_id,full_name,phone,email,relation,occupation,address) VALUES($1,$2,$3,$4,$5,$6,$7)", [studentId, p_name, p_phone, p_email, p_relation, p_occupation, p_address])
+      await client.query("INSERT INTO user_page_access(user_id,page_id,is_enabled) SELECT $1,p.id, FALSE FROM pages p", [userId])
       await client.query('COMMIT');
-      return { fullName, email }
+      return { success: true, data: { fullName, email } };
     } catch (error) {
       await client.query('ROLLBACK');
       console.error("Transaction failed:", error);
