@@ -95,14 +95,15 @@ class UserRepository {
   }
 
 
-  async CreateTeacher(fullName, email, hireDate, department) {
+  async CreateTeacher(fullName, email, hireDate, department, gender) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
       let password = await bcrypt.hash('Teacher@123', 10);
       const result = await client.query("INSERT INTO users(full_name,email,role,password) VALUES ($1,$2,$3,$4) RETURNING *", [fullName, email, 'teacher', password]);
       let userId = result.rows[0].id;
-      await client.query('INSERT INTO teachers(user_id,hire_date,department) VALUES ($1,$2,$3) RETURNING *', [userId, hireDate, department]);
+      await client.query('INSERT INTO teachers(user_id,hire_date,department,gender) VALUES ($1,$2,$3,$4) RETURNING *', [userId, hireDate, department, gender]);
+      await client.query("INSERT INTO user_page_access(user_id,page_id,is_enabled) SELECT $1,p.id, FALSE FROM pages p", [userId])
       await client.query('COMMIT');
       return { userId, department, fullName };
     } catch (error) {

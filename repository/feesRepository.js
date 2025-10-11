@@ -17,7 +17,6 @@ class FeesRepository {
     }
 
     async collectFee(studentId, feeId, amountPaid, method, status) {
-        console.log("I am clicked")
         try {
             const result = await pool.query(
                 'INSERT INTO fee_payments(student_id, student_fee_id, amount_paid, payment_method, status) VALUES ($1, $2, $3, $4, $5)',
@@ -25,6 +24,31 @@ class FeesRepository {
             );
             return result.rows;
 
+        } catch (error) {
+            console.log(error)
+            throw error;
+        }
+    }
+
+    async getDueAmountByStudentId(studentId) {
+        try {
+            const result = await pool.query(`SELECT sf.total_fee-COALESCE(SUM(fp.amount_paid),0) AS due_amount FROM student_fees sf
+                                                LEFT JOIN fee_payments fp 
+                                                ON sf.id=fp.student_fee_id
+                                                WHERE sf.student_id=$1
+                                                group by fp.student_id,sf.total_fee`, [studentId])
+
+            return result.rows[0];
+        } catch (error) {
+            console.log(error)
+            throw error;
+        }
+    }
+
+    async getFeePaymentsById(studentId) {
+        try {
+            const result = await pool.query('SELECT amount_paid,payment_date,payment_method,status FROM fee_payments WHERE student_id=$1', [studentId])
+            return result.rows;
         } catch (error) {
             console.log(error)
             throw error;

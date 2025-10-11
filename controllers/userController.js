@@ -12,10 +12,10 @@ async function GetAllStudents(req, res) {
 }
 
 async function createTeacher(req, res) {
-    const { fullName, email, hireDate, department } = req.body;
-    const result = await userRepository.CreateTeacher(fullName, email, hireDate, department);
+    const { fullName, email, hireDate, department, gender } = req.body;
+    const result = await userRepository.CreateTeacher(fullName, email, hireDate, department, gender);
     if (!result) {
-        return res.status(500).json({ message: "Something went wrong while creating the teacher." });
+        return res.status(500).json({ message: "Something went wrong while creating the teacher.", success: false });
     }
     return res.status(201).json({ success: true, message: "Teacher added successfully", data: result });
 }
@@ -91,8 +91,6 @@ async function createStudent(req, res) {
     if (!p_address || p_address.trim() === "") {
         return res.status(400).json({ error: "Parent address is required" });
     }
-
-
 
     const result = await userRepository.CreateStudent(fullName, email, classId, sectionId, admissionNumber, dob, gender, rollNo, sessionId, address, totalFee, dueDate, discount, description, p_name, p_phone, p_email, p_relation, p_occupation, p_address);
 

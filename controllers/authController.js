@@ -6,7 +6,6 @@ const pool = require('../config/db')
 async function login(req, res) {
   const { email, password } = req.body;
   const user = await userRepository.login(email, password);
-
   if (!user) {
     return res.status(401).json({ message: "Invalid Email or Password" });
   }
@@ -17,7 +16,7 @@ async function login(req, res) {
     sameSite: 'Lax',
     maxAge: 3600000
   });
-  return res.json({ role: user.role })
+  return res.json({ role: user.role, name: user.fullName, email: user.email })
 }
 
 async function checkAccess(req, res) {
