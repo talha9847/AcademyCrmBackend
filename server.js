@@ -1,7 +1,8 @@
 // server.js
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser");
+const generateCertificate = require("./controllers/extraController");
 
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -15,15 +16,17 @@ const seedDefaultUser = require("./seeds/seedDefaultUser");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}));  
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
 seedDefaultUser();
-
+// generateCertificate.generateCertificate("Talha Malek");
 
 // -----------------------
 app.use("/api/auth", authRoutes);
