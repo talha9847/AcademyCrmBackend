@@ -10,6 +10,7 @@ const slugRoutes = require("./routes/slugRoutes");
 const extraRoutes = require("./routes/extraRoutes");
 const feesRoutes = require("./routes/feesRoute");
 const frontRoutes = require("./routes/frontWebsiteRoutes");
+const attendanceRoutes = require("./routes/attendanceRoute");
 
 const seedDefaultUser = require("./seeds/seedDefaultUser");
 
@@ -35,6 +36,7 @@ app.use("/api/user", slugRoutes);
 app.use("/api/extras", extraRoutes);
 app.use("/api/fees", feesRoutes);
 app.use("/api/front", frontRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // -----------------------
 // Start Server

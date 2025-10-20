@@ -275,3 +275,33 @@ INSERT INTO public.courses (
 (8, 'Quo fugit aut volup', 'Fuga Distinctio Il', 'Dolore doloribus pra', '827', 'Ab nobis eos et und', 'Atque porro sunt ass', 'https://www.mygreatlearning.com/blog/wp-content/uploads/2020/10/shutterstock_1096975310.jpg', FALSE),
 (9, 'In adipisicing earum', 'Sint eiusmod accusa', 'Aliquip consequatur', '664', 'Voluptatem deserunt', 'Autem molestiae ea i', 'https://www.mygreatlearning.com/blog/wp-content/uploads/2020/10/shutterstock_1096975310.jpg', FALSE);
 
+
+
+
+CREATE TABLE daily_attendance (
+    id SERIAL PRIMARY KEY,
+    class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    section_id INTEGER REFERENCES sections(id) ON DELETE CASCADE SET NULL,
+    teacher_id INTEGER REFERENCES teachers(id) ON DELETE SET NULL,
+    attendance_date DATE NOT NULL,
+    session_id INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (class_id,section_id,session_id, attendance_date)
+);
+
+
+
+
+
+
+CREATE TABLE daily_attendance_records (
+    id SERIAL PRIMARY KEY,
+    attendance_id INTEGER NOT NULL REFERENCES daily_attendance(id) ON DELETE CASCADE,
+    student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    status VARCHAR(10) NOT NULL CHECK (status IN ('Present', 'Absent', 'Late', 'Leave')),
+    remarks TEXT,
+    marked_by INTEGER REFERENCES teachers(id) ON DELETE SET NULL,
+    marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (attendance_id, student_id)
+);

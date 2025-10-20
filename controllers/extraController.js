@@ -10,6 +10,52 @@ async function getAllClasses(req, res) {
   }
   return res.status(200).json({ data: result });
 }
+
+async function updateClass(req, res) {
+  const { id, name } = req.body;
+
+  const result = await extraRepository.updateClass(id, name);
+  if (result <= 0) {
+    return res
+      .status(500)
+      .json({ success: false, message: "There is some error occured" });
+  }
+  return res.status(200).json({ success: true });
+}
+async function addClass(req, res) {
+  const { name } = req.body;
+
+  const result = await extraRepository.addClass(name);
+  if (result <= 0) {
+    return res
+      .status(500)
+      .json({ success: false, message: "There is some error occured" });
+  }
+  return res.status(200).json({ success: true });
+}
+async function addSession(req, res) {
+  const { timing } = req.body;
+
+  const result = await extraRepository.addSession(timing);
+  if (result <= 0) {
+    return res
+      .status(500)
+      .json({ success: false, message: "There is some error occured" });
+  }
+  return res.status(200).json({ success: true });
+}
+async function updateSessions(req, res) {
+  const { id, timing } = req.body;
+
+  const result = await extraRepository.updateSessions(id, timing);
+  if (result <= 0) {
+    return res
+      .status(500)
+      .json({ success: false, message: "There is some error occured" });
+  }
+  return res.status(200).json({ success: true });
+}
+
 async function getAllSessions(req, res) {
   const result = await extraRepository.getAllSessions();
   if (!result) {
@@ -77,4 +123,8 @@ module.exports = {
   getAllSections,
   getSectionById,
   generateCertificate,
+  updateClass,
+  addClass,
+  updateSessions,
+  addSession,
 };

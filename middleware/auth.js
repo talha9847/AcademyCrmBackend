@@ -8,7 +8,9 @@ function authMiddleware(roles = []) {
     const token = req.cookies?.token;
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized: No token found in cookies" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token found in cookies" });
     }
 
     try {
@@ -38,8 +40,7 @@ async function foundClaims(req) {
   }
 }
 
-
 module.exports = {
   authMiddleware,
-  foundClaims
+  foundClaims,
 };

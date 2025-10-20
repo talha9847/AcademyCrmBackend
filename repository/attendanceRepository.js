@@ -1,0 +1,140 @@
+const pool = require("../config/db");
+const middleware = require("../middleware/auth");
+
+class AttendanceRepository {
+  async addDailyAttendance(classId, date, sessionId, sectionId, teacherId) {
+    let attendanceId;
+    try {
+      const query = await pool.query(
+        "SELECT id from daily_attendance WHERE class_id=$1 AND attendance_date=$2 AND session_id=$3",
+        [classId, date, sessionId]
+      );
+      if (query.rowCount > 0) {
+        attendanceId = query.rows[0].id;
+        console.log(classId, sessionId, attendanceId);
+
+        const query2 = await pool.query(
+          `SELECT 
+            u.full_name,
+            s.class_id,
+            s.id,
+            s.roll_no,
+            dar.status
+          FROM students s
+          LEFT JOIN users u ON u.id = s.user_id
+          LEFT JOIN daily_attendance_records dar 
+            ON dar.student_id = s.id AND dar.attendance_id = $3
+          WHERE s.class_id = $1 AND s.session_id = $2; `,
+          [classId, sessionId, attendanceId]
+        );
+        return { student: query2.rows, attendanceId: attendanceId };
+      } else {
+        const client = await pool.connect();
+        try {
+          await client.query("BEGIN");
+          const query = await client.query(
+            "INSERT INTO daily_attendance (class_id,teacher_id,attendance_date,session_id) VALUES($1,$2,$3,$4) RETURNING id",
+            [classId, teacherId, date, sessionId]
+          );
+          attendanceId = query.rows[0].id;
+          console.log(classId, sessionId, attendanceId);
+          const query2 = await client.query(
+            `SELECT 
+            u.full_name,
+            s.class_id,
+            s.id,
+            s.roll_no,
+            dar.status
+          FROM students s
+          LEFT JOIN users u ON u.id = s.user_id
+          LEFT JOIN daily_attendance_records dar 
+            ON dar.student_id = s.id AND dar.attendance_id = $3
+          WHERE s.class_id = $1 AND s.session_id = $2`,
+            [classId, sessionId, attendanceId]
+          );
+          await client.query("COMMIT");
+          console.log(attendanceId);
+          return query2.rows;
+        } catch (error) {
+          await client.query("ROLLBACK");
+          console.error("Transaction failed:", error);
+          return null;
+        } finally {
+          client.release();
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async storeAttendance(attendanceData, teacherId) {
+    const client = await pool.connect();
+
+    try {
+      console.log(attendanceData);
+      console.log("Teacher ID:", teacherId);
+      await client.query("BEGIN");
+
+      for (const std of attendanceData.student) {
+        await client.query(
+          `INSERT INTO daily_attendance_records 
+            (attendance_id, student_id, status, remarks, marked_by)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (attendance_id, student_id)
+            DO UPDATE SET
+              status = EXCLUDED.status,
+              remarks = EXCLUDED.remarks,
+              marked_by = EXCLUDED.marked_by`,
+          [attendanceData.id, std.id, std.status, std.remarks, teacherId]
+        );
+      }
+      await client.query("COMMIT");
+
+      return { success: true, message: "Attendance recorded successfully" };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error while storing attendance:", error);
+      return { success: false, message: "Failed to store attendance", error };
+    } finally {
+      client.release();
+    }
+  }
+
+  async viewStudent(classId, sessionId) {
+    try {
+      const query = await pool.query(
+        `SELECT s.id,u.full_name,s.roll_no FROM users u
+          LEFT JOIN students s 
+          ON s.user_id=u.id
+          JOIN classes c 
+          ON s.class_id=c.id
+          WHERE s.class_id=$1 AND s.session_id=$2`,
+        [classId, sessionId]
+      );
+      return query.rows;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async viewAttendance(studentId) {
+    try {
+      const result = await pool.query(
+        `SELECT dar.student_id,dar.status,da.attendance_date from daily_attendance_records dar
+          JOIN daily_attendance da 
+          ON dar.attendance_id=da.id
+          WHERE dar.student_id=$1`,
+        [studentId]
+      );
+      return result.rows;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+}
+
+module.exports = new AttendanceRepository();
