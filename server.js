@@ -2,6 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 const generateCertificate = require("./controllers/extraController");
 
 const authRoutes = require("./routes/authRoutes");
@@ -11,6 +12,8 @@ const extraRoutes = require("./routes/extraRoutes");
 const feesRoutes = require("./routes/feesRoute");
 const frontRoutes = require("./routes/frontWebsiteRoutes");
 const attendanceRoutes = require("./routes/attendanceRoute");
+const studentRoutes = require("./routes/studentRoute");
+const expenseRoutes = require("./routes/expenseRoutes");
 
 const seedDefaultUser = require("./seeds/seedDefaultUser");
 
@@ -23,6 +26,8 @@ app.use(
     credentials: true,
   })
 );
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -37,6 +42,8 @@ app.use("/api/extras", extraRoutes);
 app.use("/api/fees", feesRoutes);
 app.use("/api/front", frontRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/student", studentRoutes);
+app.use("/api/expense", expenseRoutes);
 
 // -----------------------
 // Start Server

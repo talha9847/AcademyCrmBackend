@@ -11,7 +11,6 @@ class AttendanceRepository {
       );
       if (query.rowCount > 0) {
         attendanceId = query.rows[0].id;
-        console.log(classId, sessionId, attendanceId);
 
         const query2 = await pool.query(
           `SELECT 
@@ -37,7 +36,6 @@ class AttendanceRepository {
             [classId, teacherId, date, sessionId]
           );
           attendanceId = query.rows[0].id;
-          console.log(classId, sessionId, attendanceId);
           const query2 = await client.query(
             `SELECT 
             u.full_name,
@@ -53,7 +51,6 @@ class AttendanceRepository {
             [classId, sessionId, attendanceId]
           );
           await client.query("COMMIT");
-          console.log(attendanceId);
           return query2.rows;
         } catch (error) {
           await client.query("ROLLBACK");
@@ -73,8 +70,6 @@ class AttendanceRepository {
     const client = await pool.connect();
 
     try {
-      console.log(attendanceData);
-      console.log("Teacher ID:", teacherId);
       await client.query("BEGIN");
 
       for (const std of attendanceData.student) {
@@ -130,6 +125,38 @@ class AttendanceRepository {
         [studentId]
       );
       return result.rows;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async getAttendanceByStudent(id) {
+    try {
+      const query = await pool.query(
+        `SELECT dar.id,dar.status,dar.remarks,da.attendance_date FROM daily_attendance_records dar
+          LEFT JOIN daily_attendance da
+          ON da.id=dar.attendance_id
+          WHERE dar.student_id=$1`,
+        [id]
+      );
+      return query.rows;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async getStudentIdFromUserId(id) {
+    try {
+      const query = await pool.query(
+        `SELECT s.id FROM students s
+          JOIN users u 
+          ON u.id=s.user_id
+          WHERE u.id=$1`,
+        [id]
+      );
+      return query.rows;
     } catch (error) {
       console.log(error);
       throw error;

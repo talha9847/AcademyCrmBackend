@@ -33,7 +33,6 @@ async function storeAttendance(req, res) {
   let teacherId = user.role == "admin" ? 1 : user.id;
   const result = await attendanceRepo.storeAttendance(students, teacherId);
   if (result.success == false) {
-    console.log(" i am in the era of the ock kjfl j fkl dkjdflk jlkfjdlk jlkdsafjlkdsaj lkf")
     return res
       .status(210)
       .json({ message: "There is some error occured", success: false });
@@ -54,7 +53,6 @@ async function viewStudent(req, res) {
 
 async function viewAttendance(req, res) {
   const { studentId } = req.body;
-  console.log(studentId);
   const result = await attendanceRepo.viewAttendance(studentId);
   if (!result) {
     return res
@@ -64,9 +62,28 @@ async function viewAttendance(req, res) {
   return res.status(200).json({ data: result, success: true });
 }
 
+async function getAttendanceByStudent(req, res) {
+  const user = await middleware.foundClaims(req);
+  if (!user) {
+    return res.status(200).json({ root: "/unauthorized" });
+  }
+  const studentId = await attendanceRepo.getStudentIdFromUserId(user.id);
+  const result = await attendanceRepo.getAttendanceByStudent(studentId[0].id);
+  const simplifiedResult = result.map((item) => ({
+    date: new Date(item.attendance_date).toLocaleDateString("en-CA"), // Format: YYYY-MM-DD
+    status: item.status,
+    remarks: item.remarks,
+  }));
+
+  return res
+    .status(200)
+    .json({ message: "got it ", data: simplifiedResult, user: user });
+}
+
 module.exports = {
   addDailyAttendance,
   storeAttendance,
   viewAttendance,
   viewStudent,
+  getAttendanceByStudent,
 };

@@ -292,9 +292,6 @@ CREATE TABLE daily_attendance (
 
 
 
-
-
-
 CREATE TABLE daily_attendance_records (
     id SERIAL PRIMARY KEY,
     attendance_id INTEGER NOT NULL REFERENCES daily_attendance(id) ON DELETE CASCADE,
@@ -304,4 +301,23 @@ CREATE TABLE daily_attendance_records (
     marked_by INTEGER REFERENCES teachers(id) ON DELETE SET NULL,
     marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (attendance_id, student_id)
+);
+
+
+
+
+
+CREATE TABLE certificates (
+    id SERIAL PRIMARY KEY,
+    certificate_number VARCHAR(30) UNIQUE NOT NULL,  -- e.g., ME2025-000123
+    verification_code VARCHAR(30) UNIQUE NOT NULL,   -- for QR link
+    recipient_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_type VARCHAR(20) CHECK (recipient_type IN ('student', 'teacher')) NOT NULL,
+    title VARCHAR(100) NOT NULL,                   
+    description TEXT,                                
+    issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    template_id INTEGER REFERENCES templates(id) ON DELETE SET NULL,  -- ✅ added proper FK
+    is_revoked BOOLEAN DEFAULT FALSE,                
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
