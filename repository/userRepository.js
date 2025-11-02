@@ -48,8 +48,11 @@ class UserRepository {
     p_occupation,
     p_address,
     p_photo,
-    s_photo
+    s_photo,
+    enrollments
   ) {
+    enrollments = JSON.parse(enrollments);
+
     const client = await pool.connect();
 
     try {
@@ -90,6 +93,12 @@ class UserRepository {
         "INSERT INTO student_fees(student_id,total_fee,due_date,discount,description) VALUES($1,$2,$3,$4,$5) RETURNING *",
         [studentId, totalFee, dueDate, discount, description]
       );
+      for (const en of enrollments) {
+        await client.query(
+          "INSERT INTO enrollments(student_id,class_id,session_id) VALUES($1,$2,$3)",
+          [studentId, en.classId, en.sessionId]
+        );
+      }
       await client.query(
         "INSERT INTO parents(student_id,full_name,phone,email,relation,occupation,address) VALUES($1,$2,$3,$4,$5,$6,$7)",
         [
@@ -202,9 +211,14 @@ class UserRepository {
   }
 
   async login(email, password) {
-    const result = pool.query("SELECT * FROM users WHERE email=$1", [email]);
-    const user = (await result).rows[0];
+    const result = await pool.query("SELECT * FROM users WHERE email=$1", [
+      email,
+    ]);
+    const user = result.rows[0];
     if (!user) {
+      return null;
+    }
+    if (user.is_active == false) {
       return null;
     }
 

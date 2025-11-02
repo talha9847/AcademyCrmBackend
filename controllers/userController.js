@@ -55,6 +55,7 @@ async function createStudent(req, res) {
     p_relation,
     p_occupation,
     p_address,
+    enrollments,
   } = req.body;
 
   if (!fullName || fullName.trim() === "") {
@@ -182,7 +183,8 @@ async function createStudent(req, res) {
     p_occupation,
     p_address,
     profileName,
-    signatureName
+    signatureName,
+    enrollments
   );
   if (result.success == false) {
     return res.status(400).json({ success: false, message: result.message });

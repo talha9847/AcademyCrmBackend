@@ -309,15 +309,37 @@ CREATE TABLE daily_attendance_records (
 
 CREATE TABLE certificates (
     id SERIAL PRIMARY KEY,
-    certificate_number VARCHAR(30) UNIQUE NOT NULL,  -- e.g., ME2025-000123
-    verification_code VARCHAR(30) UNIQUE NOT NULL,   -- for QR link
-    recipient_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    recipient_type VARCHAR(20) CHECK (recipient_type IN ('student', 'teacher')) NOT NULL,
+    certificate_number VARCHAR(30) UNIQUE NOT NULL,  
+    verification_code VARCHAR(30) UNIQUE NOT NULL,   
+	recipient_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+	enrollment_id INTEGER NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
     title VARCHAR(100) NOT NULL,                   
     description TEXT,                                
     issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    template_id INTEGER REFERENCES templates(id) ON DELETE SET NULL,  -- ✅ added proper FK
+    issued_by INTEGER, 
+    template_id INTEGER REFERENCES templates(id) ON DELETE SET NULL,  
     is_revoked BOOLEAN DEFAULT FALSE,                
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+
+
+CREATE TABLE enrollments (
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER NOT NULL,
+    class_id INTEGER NOT NULL,
+    session_id INTEGER NOT NULL,
+    section_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE,
+
+    CONSTRAINT unique_student_class_session UNIQUE (student_id, class_id, session_id)
 );
