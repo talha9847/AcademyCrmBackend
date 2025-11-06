@@ -6,8 +6,9 @@ router.post("/addAttendance", attendanceController.addDailyAttendance);
 router.post("/storeAttendance", attendanceController.storeAttendance);
 router.post("/viewAttendance", attendanceController.viewAttendance);
 router.post("/viewStudent", attendanceController.viewStudent);
-router.get(
+router.post(
   "/getAttendanceByStudent",
   attendanceController.getAttendanceByStudent
 );
+router.get("/getEnrolledClass", attendanceController.getEnrolledClass);
 module.exports = router;

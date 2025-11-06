@@ -1,7 +1,7 @@
 const userRepository = require("../repository/userRepository");
-const authMiddleware = require("../middleware/auth")
-const jwt = require('jsonwebtoken')
-const pool = require('../config/db')
+const authMiddleware = require("../middleware/auth");
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
 
 async function login(req, res) {
   const { email, password } = req.body;
@@ -9,14 +9,16 @@ async function login(req, res) {
   if (!user) {
     return res.status(401).json({ message: "Invalid Email or Password" });
   }
-  const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '24h' });
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'Lax',
-    maxAge: 3600000
-  });
-  return res.json({ role: user.role, name: user.fullName, email: user.email })
+  
+  const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "30d" });
+  res.cookie("token", token, {
+  httpOnly: true,
+  secure: false,
+  sameSite: "Lax",
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+});
+
+  return res.json({ role: user.role, name: user.fullName, email: user.email });
 }
 
 async function checkAccess(req, res) {
@@ -25,16 +27,17 @@ async function checkAccess(req, res) {
   if (!user) {
     return res.status(401).json({ message: "We are sorry this time" });
   }
-  const result = await pool.query("SELECT p.name, p.slug FROM pages p JOIN user_page_access u ON u.page_id=p.id WHERE u.user_id=$1 and u.is_enabled='true'",
-    [user.id])
+  const result = await pool.query(
+    "SELECT p.name, p.slug FROM pages p JOIN user_page_access u ON u.page_id=p.id WHERE u.user_id=$1 and u.is_enabled='true'",
+    [user.id]
+  );
 
-  const allowedSlugs = result.rows.map(p => p.slug);
+  const allowedSlugs = result.rows.map((p) => p.slug);
   if (!allowedSlugs.includes(slug)) {
     return res.status(403).json({ message: "Access denied" });
   }
 
   res.json({ message: "Access granted" });
-
 }
 
 async function checkRoleAccess(req, res) {
@@ -48,6 +51,5 @@ async function checkRoleAccess(req, res) {
   }
   return res.json({ message: "Access granted" });
 }
-
 
 module.exports = { login, checkAccess, checkRoleAccess };

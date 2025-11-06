@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 const { authMiddleware } = require("../middleware/auth");
 const upload = require("../middleware/upload");
+const studentRepository = require("../repository/studentRepository");
 
 router.get("/getAllTeachers", userController.getAllTeachers);
 router.get(

@@ -49,7 +49,8 @@ class UserRepository {
     p_address,
     p_photo,
     s_photo,
-    enrollments
+    enrollments,
+    mobile
   ) {
     enrollments = JSON.parse(enrollments);
 
@@ -73,7 +74,7 @@ class UserRepository {
       );
       let userId = result.rows[0].id;
       const student = await client.query(
-        "INSERT INTO students (user_id,class_id,section_id,admission_number,date_of_birth,gender,roll_no,session_id,address,profile_photo,signature_photo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *",
+        "INSERT INTO students (user_id,class_id,section_id,admission_number,date_of_birth,gender,roll_no,session_id,address,profile_photo,signature_photo,mobile) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *",
         [
           userId,
           classId,
@@ -86,6 +87,7 @@ class UserRepository {
           address,
           p_photo,
           s_photo,
+          mobile,
         ]
       );
       let studentId = student.rows[0].id;
@@ -133,14 +135,20 @@ class UserRepository {
          u.id AS user_id,
          u.full_name AS student_name,
          u.email AS student_email,
+         u.is_active,
          s.gender,
+         s.mobile,
          s.admission_number,
          s.date_of_birth,
          s.roll_no,
          s.address AS student_address,
          s.profile_photo,
          s.signature_photo,
+         s.status,
+         sf.total_fee,
          c.name AS class_name,
+         c.id AS class_id,
+         ss.id AS session_id,
          sc.name AS section_name,
          ss.timing AS session_timing,
          p.full_name AS parent_name,
@@ -155,12 +163,26 @@ class UserRepository {
        LEFT JOIN sections sc ON s.section_id = sc.id
        LEFT JOIN sessions ss ON s.session_id = ss.id
        LEFT JOIN parents p ON p.student_id = s.id
+       JOIN student_fees sf ON sf.student_id=s.id
        WHERE u.id = $1
        ORDER BY u.created_at ASC
        LIMIT 1`,
         [id]
       );
-      return result.rows;
+
+      const enrolledClasses = await pool.query(
+        `SELECT e.id,cs.id AS class_id,cs.name,ss.timing,ss.id AS session_id from enrollments e
+	        JOIN students s ON s.id=e.student_id
+	        JOIN users u ON u.id=s.user_id
+	        JOIN classes cs ON e.class_id=cs.id
+          JOIN sessions ss ON e.session_id=ss.id
+	        WHERE s.user_id=$1`,
+        [id]
+      );
+      return {
+        student: result.rows[0],
+        enrolledClasses: enrolledClasses.rows,
+      };
     } catch (error) {
       console.error("Error fetching student by ID:", error);
       throw error;

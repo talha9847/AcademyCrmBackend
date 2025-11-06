@@ -4,9 +4,10 @@ class studentRepository {
     try {
       const query = await pool.query(
         `SELECT 
-            u.full_name,
+          u.full_name,
 	        u.email,
-            c.name,
+          c.name,
+          u.is_active,
 	        s.admission_number,
 	        s.date_of_birth,
 	        s.roll_no,
@@ -200,6 +201,52 @@ class studentRepository {
         [rollNo, gender, studentId]
       );
       return query.rows;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async updateEnrolledClasses(eId, classId, sessionId) {
+    try {
+      const query = await pool.query(
+        `UPDATE enrollments SET class_id=$1,session_id=$2 WHERE id=$3 RETURNING *`,
+        [classId, sessionId, eId]
+      );
+      return query.rows[0];
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async addEnrolledClasses(classId, sessionId, studentId) {
+    try {
+      const query = await pool.query(
+        `INSERT INTO enrollments(class_id,session_id,student_id) VALUES($1,$2,$3)`,
+        [classId, sessionId, studentId]
+      );
+      return query.rowCount;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  async deleteEnrolledClasses(id) {
+    try {
+      const query = await pool.query(`DELETE FROM enrollments WHERE id=$1`, [
+        id,
+      ]);
+      return query.rowCount;
+    } catch (error) {}
+  }
+  async updatePI(dob, address, status, contact, studentId) {
+    try {
+      const query = await pool.query(
+        `UPDATE students SET status=$1,date_of_birth=$2,address=$3,mobile=$4 WHERE id=$5`,
+        [status, dob, address, contact, studentId]
+      );
+      return query.rowCount;
     } catch (error) {
       console.log(error);
       throw error;

@@ -56,6 +56,7 @@ async function createStudent(req, res) {
     p_occupation,
     p_address,
     enrollments,
+    mobile,
   } = req.body;
 
   if (!fullName || fullName.trim() === "") {
@@ -184,7 +185,8 @@ async function createStudent(req, res) {
     p_address,
     profileName,
     signatureName,
-    enrollments
+    enrollments,
+    mobile
   );
   if (result.success == false) {
     return res.status(400).json({ success: false, message: result.message });
@@ -222,9 +224,11 @@ async function getStudentById(req, res) {
   const { id } = req.query;
   const result = await userRepository.getStudentById(id);
   if (!result) {
-    return res.status(500).json({ message: "There is something not good" });
+    return res
+      .status(500)
+      .json({ message: "There is something not good", success: false });
   }
-  return res.status(200).json({ data: result });
+  return res.status(200).json({ data: result, success: true });
 }
 
 module.exports = {

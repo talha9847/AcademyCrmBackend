@@ -13,17 +13,16 @@ class AttendanceRepository {
         attendanceId = query.rows[0].id;
 
         const query2 = await pool.query(
-          `SELECT 
-            u.full_name,
-            s.class_id,
-            s.id,
-            s.roll_no,
-            dar.status
-          FROM students s
-          LEFT JOIN users u ON u.id = s.user_id
+          `SELECT u.full_name, e.class_id, s.id,s.roll_no,dar.status
+	          FROM enrollments e
+          JOIN students s
+	          ON s.id = e.student_id
+          LEFT JOIN users u 
+	          ON u.id = s.user_id
           LEFT JOIN daily_attendance_records dar 
             ON dar.student_id = s.id AND dar.attendance_id = $3
-          WHERE s.class_id = $1 AND s.session_id = $2; `,
+          WHERE e.class_id = $1 
+            AND e.session_id = $2; `,
           [classId, sessionId, attendanceId]
         );
         return { student: query2.rows, attendanceId: attendanceId };
@@ -100,12 +99,15 @@ class AttendanceRepository {
   async viewStudent(classId, sessionId) {
     try {
       const query = await pool.query(
-        `SELECT s.id,u.full_name,s.roll_no FROM users u
-          LEFT JOIN students s 
-          ON s.user_id=u.id
-          JOIN classes c 
-          ON s.class_id=c.id
-          WHERE s.class_id=$1 AND s.session_id=$2`,
+        `SELECT s.id,u.full_name,s.roll_no
+	        FROM enrollments e
+        JOIN students s
+	        ON s.id = e.student_id
+        JOIN users u 
+	        ON u.id = s.user_id
+        JOIN classes c 
+	        ON e.class_id = c.id
+        WHERE e.class_id = $1 AND e.session_id = $2;`,
         [classId, sessionId]
       );
       return query.rows;
@@ -125,6 +127,38 @@ class AttendanceRepository {
         [studentId]
       );
       return result.rows;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async getAttendanceByClass(studentId, classId) {
+    try {
+      const result = await pool.query(
+        `SELECT dar.student_id,dar.status,da.attendance_date from daily_attendance_records dar
+          JOIN daily_attendance da 
+          ON dar.attendance_id=da.id
+          WHERE dar.student_id=$1 AND da.class_id=$2`,
+        [studentId, classId]
+      );
+      return result.rows;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async getEnrolledClass(studentId) {
+    try {
+      const query = await pool.query(
+        `SELECT c.id,c.name FROM enrollments e
+          JOIN classes c
+          ON e.class_id=c.id
+          WHERE e.student_id=$1`,
+        [studentId]
+      );
+      return query.rows;
     } catch (error) {
       console.log(error);
       throw error;
