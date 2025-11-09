@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "https://academy-crm-frontend.vercel.app/",
+    origin: "https://academy-crm-frontend.vercel.app",
     credentials: true,
   })
 );
