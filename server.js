@@ -45,6 +45,10 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/expense", expenseRoutes);
 
+app.get("/first", (req, res) => {
+  res.status(200).json({ message: "I am running in good mood" });
+});
+
 // -----------------------
 // Start Server
 // -----------------------
