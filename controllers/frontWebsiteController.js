@@ -35,6 +35,14 @@ async function aboutCoreMission(req, res) {
 
   return res.status(200).json({ success: false, data: result });
 }
+async function getAllAboutCoreVision(req, res) {
+  const result = await frontWebsiteRepository.getAllAboutCoreVision();
+  if (!result) {
+    return res.status(500).json({ success: false, message: "There is no" });
+  }
+
+  return res.status(200).json({ success: false, data: result });
+}
 
 async function updateHeroData(req, res) {
   try {
@@ -330,6 +338,22 @@ async function updateAboutCoreMission(req, res) {
   }
   return res.status(200).json({ data: result, success: true });
 }
+async function updateAboutCoreVision(req, res) {
+  const { icon, title, description, show, id } = req.body;
+  const result = await frontWebsiteRepository.updateAboutCoreVision(
+    icon,
+    title,
+    description,
+    show,
+    id
+  );
+  if (result < 1) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
 
 async function addAboutCoreMission(req, res) {
   const { icon, title, description, show } = req.body;
@@ -345,6 +369,217 @@ async function addAboutCoreMission(req, res) {
       .json({ success: false, message: "there is some error" });
   }
   return res.status(200).json({ data: result, success: true });
+}
+async function addAboutCoreVision(req, res) {
+  const { icon, title, description, show } = req.body;
+  const result = await frontWebsiteRepository.addAboutCoreVision(
+    icon,
+    title,
+    description,
+    show
+  );
+  if (result < 1) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+
+async function getMilestones(req, res) {
+  const result = await frontWebsiteRepository.getMilestones();
+  if (!result) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+async function updateMilestone(req, res) {
+  const { year, title, description, icon, color, id } = req.body;
+  const result = frontWebsiteRepository.updateMilestone(
+    year,
+    title,
+    description,
+    icon,
+    color,
+    id
+  );
+  if (result < 1) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+async function addMilestone(req, res) {
+  const { year, title, description, icon, color } = req.body;
+  const result = frontWebsiteRepository.addMilestone(
+    year,
+    title,
+    description,
+    icon,
+    color
+  );
+  if (result < 1) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+async function deleteMilestone(req, res) {
+  const { id } = req.body;
+  const result = await frontWebsiteRepository.deleteMilestone(id);
+  if (result < 1) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+async function getGallery(req, res) {
+  const result = await frontWebsiteRepository.getGallery();
+  if (!result) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+async function getAllGallery(req, res) {
+  const result = await frontWebsiteRepository.getAllGallery();
+  if (!result) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+
+async function getCoursDetailById(req, res) {
+  const { courseId } = req.body;
+  const result = await frontWebsiteRepository.getCoursDetailById(courseId);
+  if (!result) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+
+async function getBlogs(req, res) {
+  const result = await frontWebsiteRepository.getBlogs();
+  if (!result) {
+    return res
+      .status(500)
+      .json({ success: false, message: "there is some error" });
+  }
+  return res.status(200).json({ data: result, success: true });
+}
+async function getAllBlogs(req, res) {
+  try {
+    const result = await frontWebsiteRepository.getAllBlogs();
+    if (!result) {
+      return res.status(500).json({
+        success: false,
+        message: "There is some error",
+      });
+    }
+
+    const formattedBlogs = result.map((blog) => ({
+      ...blog,
+      date: new Date(blog.date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    }));
+
+    return res.status(200).json({ data: formattedBlogs, success: true });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+async function updateCourseModule(req, res) {
+  const { module, courseId } = req.body;
+  const modulesJSON = JSON.stringify(module);
+
+  try {
+    const query = await pool.query(
+      "UPDATE courses SET curriculum = $1::jsonb WHERE id = $2",
+      [modulesJSON, courseId]
+    );
+    if (query.rowCount < 1) {
+      return res.status(500).json({ success: false });
+    }
+    return res
+      .status(200)
+      .json({ message: "It is good to see", success: true });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false });
+  }
+}
+
+async function updateCourseDescription(req, res) {
+  const { long_description, courseId, short_description } = req.body;
+  const modulesJSON = JSON.stringify(long_description);
+
+  console.log(long_description, courseId, short_description);
+
+  try {
+    const query = await pool.query(
+      "UPDATE courses SET long_description = $1::jsonb, short_description=$2 WHERE id = $3",
+      [modulesJSON, short_description, courseId]
+    );
+    if (query.rowCount < 1) {
+      return res.status(500).json({ success: false });
+    }
+    return res
+      .status(200)
+      .json({ message: "It is good to see", success: true });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false });
+  }
+}
+
+async function updateCourseInstructor(req, res) {
+  const { title, courseId, name, des } = req.body;
+
+  try {
+    const query = await pool.query(
+      "UPDATE courses SET instructor_title = $1, instructor_name=$2,instructor_bio=$3 WHERE id = $4",
+      [title, name, des, courseId]
+    );
+    if (query.rowCount < 1) {
+      return res.status(500).json({ success: false });
+    }
+    return res
+      .status(200)
+      .json({ message: "It is good to see", success: true });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false });
+  }
+}
+
+async function deleteCourse(req, res) {
+  const { id } = req.body;
+  try {
+    const query = await pool.query("DELETE FROM courses WHERE id=$1", [id]);
+    if (query.rowCount < 1) {
+      return res.status(500).json({ success: false });
+    }
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    if (query.rowCount < 1) {
+      return res.status(500).json({ success: false });
+    }
+  }
 }
 
 module.exports = {
@@ -367,5 +602,21 @@ module.exports = {
   updateAboutSection,
   getAboutCoreMission,
   updateAboutCoreMission,
-  addAboutCoreMission
+  addAboutCoreMission,
+  getAllAboutCoreVision,
+  updateAboutCoreVision,
+  addAboutCoreVision,
+  getMilestones,
+  updateMilestone,
+  addMilestone,
+  deleteMilestone,
+  getGallery,
+  getAllGallery,
+  getBlogs,
+  getAllBlogs,
+  getCoursDetailById,
+  updateCourseModule,
+  updateCourseDescription,
+  updateCourseInstructor,
+  deleteCourse,
 };

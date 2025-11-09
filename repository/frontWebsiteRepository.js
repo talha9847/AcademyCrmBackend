@@ -70,11 +70,138 @@ class frontWebsite {
       throw error;
     }
   }
+
+  async getMilestones() {
+    try {
+      const query = await pool.query(
+        "SELECT id,year,title,description,icon, color FROM milestones ORDER BY id"
+      );
+      return query.rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async updateAboutCoreMission(icon, title, description, show, id) {
     try {
       const result = await pool.query(
         "UPDATE aboutCoreMission SET icon=$1,title=$2,description=$3,show=$4  WHERE id=$5",
         [icon, title, description, show, id]
+      );
+
+      return result.rowCount;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  async updateMilestone(year, title, description, icon, color, id) {
+    try {
+      const result = await pool.query(
+        "UPDATE milestones SET year=$1,title=$2,description=$3,icon=$4,color=$5  WHERE id=$6",
+        [year, title, description, icon, color, id]
+      );
+
+      return result.rowCount;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  async addMilestone(year, title, description, icon, color) {
+    try {
+      const result = await pool.query(
+        "INSERT INTO milestones (year,title,description,icon,color ) VALUES($1,$2,$3,$4,$5)",
+        [year, title, description, icon, color]
+      );
+
+      return result.rowCount;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  async getGallery() {
+    try {
+      const query = await pool.query(
+        "SELECT id,src,alt,caption FROM gallery WHERE show=true LIMIT 6"
+      );
+      return query.rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async getBlogs() {
+    try {
+      const query = await pool.query(
+        "SELECT title,date,excerpt,category,image FROM blogs WHERE show=true LIMIT 3"
+      );
+      return query.rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async getAllBlogs() {
+    try {
+      const query = await pool.query(
+        "SELECT id,title,date,excerpt,category,image FROM blogs"
+      );
+      return query.rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async getAllGallery() {
+    try {
+      const query = await pool.query(
+        "SELECT id,src,alt,caption,show FROM gallery"
+      );
+      return query.rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getCoursDetailById(courseId) {
+    try {
+      const query = await pool.query(
+        `SELECT id,title,slug,tagline,short_description,long_description,curriculum,instructor_name,instructor_title,instructor_bio,instructor_image_url,category,level,image,price,duration, jsonb_array_length(curriculum) AS modules,featured FROM courses WHERE id=$1`,
+        [courseId]
+      );
+      return query.rows[0];
+    } catch (error) {}
+  }
+
+  async deleteMilestone(id) {
+    try {
+      const result = await pool.query("DELETE FROM milestones WHERE id=$1", [
+        id,
+      ]);
+
+      return result.rowCount;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  async updateAboutCoreVision(icon, title, description, show, id) {
+    try {
+      const result = await pool.query(
+        "UPDATE aboutcorevision SET icon=$1,title=$2,description=$3,show=$4  WHERE id=$5",
+        [icon, title, description, show, id]
+      );
+
+      return result.rowCount;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  async addAboutCoreVision(icon, title, description, show) {
+    try {
+      const result = await pool.query(
+        "INSERT INTO  aboutcorevision (icon,title,description,show) VALUES ($1,$2,$3,$4)",
+        [icon, title, description, show]
       );
 
       return result.rowCount;

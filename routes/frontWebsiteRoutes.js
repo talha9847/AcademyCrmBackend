@@ -24,10 +24,38 @@ router.post("/deleteTestimonial", frontWebsiteController.deleteTestimonial);
 router.post("/addTestimonial", frontWebsiteController.addTestimonial);
 router.post("/updateAboutSection", frontWebsiteController.updateAboutSection);
 router.get("/getAboutCoreMission", frontWebsiteController.getAboutCoreMission);
+router.get(
+  "/getAllAboutCoreVision",
+  frontWebsiteController.getAllAboutCoreVision
+);
 router.post(
   "/updateAboutCoreMission",
   frontWebsiteController.updateAboutCoreMission
 );
+router.post(
+  "/updateAboutCoreVision",
+  frontWebsiteController.updateAboutCoreVision
+);
 router.post("/addAboutCoreMission", frontWebsiteController.addAboutCoreMission);
+router.post("/addAboutCoreVision", frontWebsiteController.addAboutCoreVision);
+router.get("/getMilestones", frontWebsiteController.getMilestones);
+router.put("/updateMilestone", frontWebsiteController.updateMilestone);
+router.post("/addMilestone", frontWebsiteController.addMilestone);
+router.post("/deleteMilestone", frontWebsiteController.deleteMilestone);
+router.get("/getGallery", frontWebsiteController.getGallery);
+router.get("/getAllGallery", frontWebsiteController.getAllGallery);
+router.get("/getBlogs", frontWebsiteController.getBlogs);
+router.get("/getAllBlogs", frontWebsiteController.getAllBlogs);
+router.post("/getCoursDetailById", frontWebsiteController.getCoursDetailById);
+router.put("/updateCourseModule", frontWebsiteController.updateCourseModule);
+router.put(
+  "/updateCourseDescription",
+  frontWebsiteController.updateCourseDescription
+);
+router.put(
+  "/updateCourseInstructor",
+  frontWebsiteController.updateCourseInstructor
+);
+router.post("/deleteCourse", frontWebsiteController.deleteCourse);
 
 module.exports = router;

@@ -73,6 +73,9 @@ class UserRepository {
         [fullName, email, "student", password]
       );
       let userId = result.rows[0].id;
+
+
+
       const student = await client.query(
         "INSERT INTO students (user_id,class_id,section_id,admission_number,date_of_birth,gender,roll_no,session_id,address,profile_photo,signature_photo,mobile) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *",
         [
@@ -91,6 +94,11 @@ class UserRepository {
         ]
       );
       let studentId = student.rows[0].id;
+
+      console.log(
+        "kd flkdjfl kdjf d;lj f;lkdj;lkfd j;lk fj;lkdj fkdjlkf jdlhfjlikdjf;lk ds;kfj ;lkdj; djf;lkd jfkdsj;lkj;dkj"
+      );
+
       await client.query(
         "INSERT INTO student_fees(student_id,total_fee,due_date,discount,description) VALUES($1,$2,$3,$4,$5) RETURNING *",
         [studentId, totalFee, dueDate, discount, description]

@@ -189,19 +189,25 @@ async function updateEnrolledClasses(req, res) {
 }
 
 async function addEnrolledClasses(req, res) {
-  const { classId, sessionId, userId } = req.body;
-  const studentId = await attendanceRepository.getStudentIdFromUserId(userId);
-  const result = await studentRepository.addEnrolledClasses(
-    classId,
-    sessionId,
-    studentId[0].id
-  );
-  if (result < 1) {
+  try {
+    const { classId, sessionId, userId } = req.body;
+    const studentId = await attendanceRepository.getStudentIdFromUserId(userId);
+    const result = await studentRepository.addEnrolledClasses(
+      classId,
+      sessionId,
+      studentId[0].id
+    );
+    if (result < 1) {
+      return res
+        .status(500)
+        .json({ success: false, message: "there is error occured" });
+    }
+    return res.status(200).json({ success: true });
+  } catch (error) {
     return res
       .status(500)
       .json({ success: false, message: "there is error occured" });
   }
-  return res.status(200).json({ success: true });
 }
 
 async function deleteEnrolledClasses(req, res) {

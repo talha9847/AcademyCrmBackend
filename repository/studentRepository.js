@@ -226,6 +226,7 @@ class studentRepository {
         `INSERT INTO enrollments(class_id,session_id,student_id) VALUES($1,$2,$3)`,
         [classId, sessionId, studentId]
       );
+      console.log(classId, sessionId, studentId);
       return query.rowCount;
     } catch (error) {
       console.log(error);
