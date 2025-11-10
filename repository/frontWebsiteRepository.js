@@ -134,7 +134,7 @@ class frontWebsite {
   async getBlogs() {
     try {
       const query = await pool.query(
-        "SELECT title,date,excerpt,category,image FROM blogs WHERE show=true LIMIT 3"
+        "SELECT title,date,excerpt,category,image,slug FROM blogs WHERE show=true LIMIT 3"
       );
       return query.rows;
     } catch (error) {

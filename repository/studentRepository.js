@@ -121,7 +121,7 @@ class studentRepository {
   async getAllAssignedCertificates() {
     try {
       const query = await pool.query(
-        `SELECT c.id,c.title,t.name as template,c.certificate_number,c.verification_code,c.issue_date,c.is_revoked,cs.name,s.profile_photo FROM certificates c
+        `SELECT c.id,c.title,t.name as template,c.certificate_number,c.verification_code,c.issue_date,c.is_revoked,cs.name,s.profile_photo,s.signature_photo FROM certificates c
           JOIN students s 
           ON c.recipient_id=s.id
           JOIN classes cs
