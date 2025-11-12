@@ -11,7 +11,16 @@ router.get(
   authMiddleware(["admin", "teacher"]),
   userController.GetAllStudents
 );
-router.post("/createTeacher", userController.createTeacher);
+router.post(
+  "/createTeacher",
+  upload.fields([
+    {
+      name: "profilePhoto",
+      maxCount: 1,
+    },
+  ]),
+  userController.createTeacher
+);
 router.post(
   "/createStudent",
   authMiddleware(["admin", "teacher"]),
@@ -22,5 +31,8 @@ router.post(
   userController.createStudent
 );
 router.get("/getStudentDetail", userController.getStudentById);
+router.post("/getTeacherById", userController.getTeacherById);
+router.get("/getPhoto/:fileName", userController.getPhoto);
+router.get("/getCerti/*", userController.getCerti);
 
 module.exports = router;

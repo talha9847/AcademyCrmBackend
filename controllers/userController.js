@@ -2,6 +2,7 @@ const { getAllClasses } = require("../repository/extraRepository");
 const userRepository = require("../repository/userRepository");
 const path = require("path");
 const fs = require("fs");
+const pool = require("../config/db");
 
 async function GetAllStudents(req, res) {
   const result = await userRepository.GetAllStudents();
@@ -12,25 +13,162 @@ async function GetAllStudents(req, res) {
 }
 
 async function createTeacher(req, res) {
-  const { fullName, email, hireDate, department, gender } = req.body;
-  const result = await userRepository.CreateTeacher(
-    fullName,
-    email,
-    hireDate,
-    department,
-    gender
-  );
-  if (!result) {
+  try {
+    const {
+      fullName,
+      email,
+      hireDate,
+      department,
+      gender,
+      birthdate,
+      designation,
+      address,
+    } = req.body;
+    const photo = req.files.profilePhoto[0];
+    let staffId;
+
+    try {
+      const query = await pool.query("SELECT 1 FROM users WHERE email = $1", [
+        email,
+      ]);
+
+      if (query.rows.length > 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Email already exists" });
+      }
+    } catch (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+
+    try {
+      const query = await pool.query(
+        "SELECT staff_id FROM teachers ORDER BY created_at DESC LIMIT 1"
+      );
+      const previousStaffId = query.rows[0].staff_id;
+      const prefix = previousStaffId.match(/^[A-Za-z-]+/)[0];
+      const numberPart = previousStaffId.match(/\d+$/)[0];
+      const newNumber = (parseInt(numberPart, 10) + 1)
+        .toString()
+        .padStart(numberPart.length, "0");
+      const newStaffId = `${prefix}${newNumber}`;
+      staffId = newStaffId;
+    } catch (error) {
+      console.log(error);
+    }
+    // --- Basic field presence validation ---
+    if (!photo) {
+      return res
+        .status(400)
+        .json({ message: "Profile photo is required", success: false });
+    }
+
+    if (!fullName) {
+      return res
+        .status(400)
+        .json({ message: "Name fields are required", success: false });
+    }
+    if (!email) {
+      return res
+        .status(400)
+        .json({ message: "email fields are required", success: false });
+    }
+    if (!hireDate) {
+      return res
+        .status(400)
+        .json({ message: "hireDate fields are required", success: false });
+    }
+    if (!department) {
+      return res
+        .status(400)
+        .json({ message: "department fields are required", success: false });
+    }
+    if (!gender) {
+      return res
+        .status(400)
+        .json({ message: "gender fields are required", success: false });
+    }
+    if (!staffId) {
+      return res
+        .status(400)
+        .json({ message: "staffId fields are required", success: false });
+    }
+    if (!designation) {
+      return res
+        .status(400)
+        .json({ message: "designation fields are required", success: false });
+    }
+    if (!address) {
+      return res
+        .status(400)
+        .json({ message: "address fields are required", success: false });
+    }
+
+    console.log(birthdate);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid email format", success: false });
+    }
+
+    const validGenders = ["male", "female", "other"];
+    if (!validGenders.includes(gender.toLowerCase())) {
+      return res
+        .status(400)
+        .json({ message: "Invalid gender value", success: false });
+    }
+
+    const isValidDate = (dateStr) => !isNaN(Date.parse(dateStr));
+    if (!isValidDate(hireDate) || !isValidDate(birthdate)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid date format", success: false });
+    }
+
+    const extension = path.extname(req.files.profilePhoto[0].originalname);
+    const nameToStore = `${email}_profile${extension}`;
+    console.log(req.files.profilePhoto[0]);
+    const uploadDir = path.join(__dirname, "..", "uploads");
+    const fullPath = path.join(uploadDir, nameToStore);
+
+    console.log(res.status);
+    console.log(fullPath);
+    const result = await userRepository.CreateTeacher(
+      fullName,
+      email,
+      hireDate,
+      department,
+      gender,
+      birthdate,
+      staffId,
+      designation,
+      address,
+      nameToStore
+    );
+    if (!result) {
+      return res.status(500).json({
+        message: "Something went wrong while creating the teacher.",
+        success: false,
+      });
+    }
+    if (result.userId > 0) {
+      fs.writeFileSync(fullPath, photo.buffer);
+      return res.status(200).json({ message: "Done", success: true });
+    }
     return res.status(500).json({
-      message: "Something went wrong while creating the teacher.",
       success: false,
+      message: "Teacher added successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error added successfully",
     });
   }
-  return res.status(201).json({
-    success: true,
-    message: "Teacher added successfully",
-    data: result,
-  });
 }
 
 async function createStudent(req, res) {
@@ -231,10 +369,53 @@ async function getStudentById(req, res) {
   return res.status(200).json({ data: result, success: true });
 }
 
+async function getTeacherById(req, res) {
+  const { userId } = req.body;
+  try {
+    const result = await userRepository.getTeacherById(userId);
+    if (!result) {
+      return res
+        .status(500)
+        .json({ message: "There is some erro", success: false });
+    }
+    return res
+      .status(200)
+      .json({ message: "Successfull", success: true, data: result });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "There is some erro", success: false });
+  }
+}
+
+async function getPhoto(req, res) {
+  const { fileName } = req.params;
+  try {
+    const filePath = path.join(__dirname, "..", "uploads", fileName);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
+async function getCerti(req, res) {
+  try {
+    const filePath = path.join(__dirname, "..", req.params[0]);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error("Error fetching certificate:", error);
+    res.status(500).json({ message: "Error fetching certificate" });
+  }
+}
+
 module.exports = {
   GetAllStudents,
   createTeacher,
   createStudent,
   getStudentById,
   getAllTeachers,
+  getTeacherById,
+  getPhoto,
+  getCerti,
 };

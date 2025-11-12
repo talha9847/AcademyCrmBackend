@@ -16,6 +16,7 @@ const studentRoutes = require("./routes/studentRoute");
 const expenseRoutes = require("./routes/expenseRoutes");
 
 const seedDefaultUser = require("./seeds/seedDefaultUser");
+const { authMiddleware } = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,7 +34,16 @@ app.use(
 //     credentials: true,
 //   })
 // );
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use(
+  "/uploads/gallery",
+  express.static(path.join(__dirname, "uploads", "certificates"))
+);
+app.use(
+  "/uploads",
+  authMiddleware(["admin", "teacher", "student"]),
+  express.static(path.join(__dirname, "uploads"))
+);
 
 app.use(express.json());
 app.use(cookieParser());

@@ -20,10 +20,14 @@ class UserRepository {
   }
 
   async GetAllStudents() {
-    const result = await pool.query(
-      "SELECT u.id,u.full_name,u.email,s.gender,c.name FROM users u JOIN students s ON u.id=s.user_id LEFT JOIN classes c ON s.class_id=c.id WHERE role='student' ORDER BY u.created_at ASC"
-    );
-    return result.rows;
+    try {
+      const result = await pool.query(
+        "SELECT u.id,u.full_name,u.email,s.gender,c.name,s.status FROM users u JOIN students s ON u.id=s.user_id LEFT JOIN classes c ON s.class_id=c.id WHERE role='student' ORDER BY u.created_at ASC"
+      );
+      return result.rows;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async CreateStudent(
@@ -74,10 +78,8 @@ class UserRepository {
       );
       let userId = result.rows[0].id;
 
-
-
       const student = await client.query(
-        "INSERT INTO students (user_id,class_id,section_id,admission_number,date_of_birth,gender,roll_no,session_id,address,profile_photo,signature_photo,mobile) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *",
+        "INSERT INTO students (user_id,class_id,section_id,admission_number,date_of_birth,gender,roll_no,session_id,address,profile_photo,signature_photo,mobile,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *",
         [
           userId,
           classId,
@@ -91,6 +93,7 @@ class UserRepository {
           p_photo,
           s_photo,
           mobile,
+          "ACTIVE",
         ]
       );
       let studentId = student.rows[0].id;
@@ -197,19 +200,40 @@ class UserRepository {
     }
   }
 
-  async CreateTeacher(fullName, email, hireDate, department, gender) {
+  async CreateTeacher(
+    fullName,
+    email,
+    hireDate,
+    department,
+    gender,
+    birthdate,
+    staffId,
+    designation,
+    address,
+    profilePhoto
+  ) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
       let password = await bcrypt.hash("Teacher@123", 10);
       const result = await client.query(
-        "INSERT INTO users(full_name,email,role,password) VALUES ($1,$2,$3,$4) RETURNING *",
-        [fullName, email, "teacher", password]
+        "INSERT INTO users(full_name,email,role,password,is_active) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+        [fullName, email, "teacher", password, true]
       );
       let userId = result.rows[0].id;
       await client.query(
-        "INSERT INTO teachers(user_id,hire_date,department,gender) VALUES ($1,$2,$3,$4) RETURNING *",
-        [userId, hireDate, department, gender]
+        "INSERT INTO teachers(user_id,hire_date,department,gender,birthdate,staff_id,designation,address,profile_photo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
+        [
+          userId,
+          hireDate,
+          department,
+          gender,
+          birthdate,
+          staffId,
+          designation,
+          address,
+          profilePhoto,
+        ]
       );
       await client.query(
         "INSERT INTO user_page_access(user_id,page_id,is_enabled) SELECT $1,p.id, FALSE FROM pages p",
@@ -263,6 +287,22 @@ class UserRepository {
       fullName: user.full_name,
       role: user.role,
     };
+  }
+
+  async getTeacherById(userId) {
+    try {
+      const query = await pool.query(
+        `SELECT u.full_name,u.email,u.is_active,t.hire_date,t.birthdate,t.department,t.gender,t.staff_id,t.designation,t.address,t.profile_photo 
+                  FROM teachers t
+                  JOIN users u 
+                  ON t.user_id=u.id
+                  WHERE u.id=$1`,
+        [userId]
+      );
+      return query.rows[0];
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 
