@@ -34,5 +34,6 @@ router.get("/getStudentDetail", userController.getStudentById);
 router.post("/getTeacherById", userController.getTeacherById);
 router.get("/getPhoto/:fileName", userController.getPhoto);
 router.get("/getCerti/*", userController.getCerti);
+router.get("/getCertiPhoto/*", userController.getCertiPhoto);
 
 module.exports = router;

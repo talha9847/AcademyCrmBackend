@@ -106,6 +106,7 @@ async function assignCertificate(req, res) {
     if (templateId == null || templateId == "") {
       return res.status(500).json({ message: "template id not found" });
     }
+
     const result = await studentRepository.assignCertificate(
       certificate_number,
       verification_code,
@@ -118,6 +119,25 @@ async function assignCertificate(req, res) {
     if (result < 1) {
       return res.status(500).json({ success: false });
     }
+
+    const query = await pool.query(
+      "SELECT profile_photo FROM students WHERE id=$1",
+      [recipientId]
+    );
+    const photoName = query.rows[0].profile_photo;
+    console.log(query.rows[0]);
+    const sourcePath = path.join(__dirname, "..", "uploads", photoName);
+    const photoPath = path.join(
+      __dirname,
+      "..",
+      "uploads",
+      "certi_profile",
+      photoName
+    );
+
+    
+    fs.copyFileSync(sourcePath, photoPath);
+
     return res.status(200).json({ message: "Ok got it", success: true });
   } catch (error) {
     console.log(error);

@@ -398,10 +398,30 @@ async function getPhoto(req, res) {
   }
 }
 
-
 async function getCerti(req, res) {
   try {
     const filePath = path.join(__dirname, "..", req.params[0]);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error("Error fetching certificate:", error);
+    res.status(500).json({ message: "Error fetching certificate" });
+  }
+}
+async function getCertiPhoto(req, res) {
+  try {
+    const fileName = decodeURIComponent(req.params[0]);
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "uploads",
+      "certi_profile",
+      fileName
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
     res.sendFile(filePath);
   } catch (error) {
     console.error("Error fetching certificate:", error);
@@ -418,4 +438,5 @@ module.exports = {
   getTeacherById,
   getPhoto,
   getCerti,
+  getCertiPhoto,
 };
