@@ -35,5 +35,33 @@ router.post("/getTeacherById", userController.getTeacherById);
 router.get("/getPhoto/:fileName", userController.getPhoto);
 router.get("/getCerti/*", userController.getCerti);
 router.get("/getCertiPhoto/*", userController.getCertiPhoto);
+router.get(
+  "/getTeacherProfile*",
+  authMiddleware(["teacher"]),
+  userController.getTeacherProfile
+);
+router.put(
+  "/updateDobAndContactOfTeacher",
+  userController.updateDobAndContactOfTeacher
+);
+
+router.put(
+  "/updateGenderAndAddressOfTeacher",
+  userController.updateGenderAndAddressOfTeacher
+);
+router.put(
+  "/updateHireDateAndDesignationOfTeacher",
+  userController.updateHireDateAndDesignationOfTeacher
+);
+router.put(
+  "/updateTeacherProfile",
+  upload.fields([
+    {
+      name: "profilePhoto",
+      maxCount: 1,
+    },
+  ]),
+  userController.updateTeacherProfile
+);
 
 module.exports = router;

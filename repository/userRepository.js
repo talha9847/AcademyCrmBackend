@@ -292,7 +292,7 @@ class UserRepository {
   async getTeacherById(userId) {
     try {
       const query = await pool.query(
-        `SELECT u.full_name,u.email,u.is_active,t.hire_date,t.birthdate,t.department,t.gender,t.staff_id,t.designation,t.address,t.profile_photo 
+        `SELECT u.full_name,u.email,u.is_active,t.hire_date,t.birthdate,t.department,t.gender,t.staff_id,t.designation,t.address,t.profile_photo,t.mobile
                   FROM teachers t
                   JOIN users u 
                   ON t.user_id=u.id
@@ -302,6 +302,24 @@ class UserRepository {
       return query.rows[0];
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async getTeacherProfile(userId) {
+    try {
+      const query = await pool.query(
+        ` SELECT u.full_name,u.email,t.hire_date,t.department,t.gender,t.staff_id,t.designation,t.address,t.profile_photo
+            FROM users u JOIN teachers t ON t.user_id=u.id WHERE u.id=$1`,
+        [userId]
+      );
+
+      if (query.rowCount < 1) {
+        return null;
+      }
+      return query.rows[0];
+    } catch (error) {
+      console.log(error);
+      return null;
     }
   }
 }

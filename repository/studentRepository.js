@@ -1,4 +1,7 @@
 const pool = require("../config/db");
+const bcrypt = require("bcrypt");
+const { authMiddleware } = require("../middleware/auth");
+
 class studentRepository {
   async getProfileDetail(id) {
     try {
@@ -13,6 +16,7 @@ class studentRepository {
 	        s.roll_no,
           s.profile_photo,
           s.signature_photo,
+          s.mobile,
 	        ss.timing,
 	        s.gender,
             p.full_name,
@@ -165,7 +169,6 @@ class studentRepository {
           WHERE template_id=$1 AND recipient_id=$2`,
         [templateId, recipientId]
       );
-      console.log(result.rows.length > 0);
       return result.rows.length > 0;
     } catch (error) {
       console.log(error);
@@ -226,7 +229,7 @@ class studentRepository {
         `INSERT INTO enrollments(class_id,session_id,student_id) VALUES($1,$2,$3)`,
         [classId, sessionId, studentId]
       );
-      console.log(classId, sessionId, studentId);
+
       return query.rowCount;
     } catch (error) {
       console.log(error);
@@ -251,6 +254,31 @@ class studentRepository {
     } catch (error) {
       console.log(error);
       throw error;
+    }
+  }
+
+  async changePassword(newPass, id) {
+    try {
+      const query = await pool.query("SELECT password FROM users WHERE id=$1", [
+        id,
+      ]);
+      const hased = await bcrypt.hash(newPass, 10);
+      const check = await bcrypt.compare(newPass, query.rows[0].password);
+      if (check) {
+        return -1;
+      } else {
+        const query = await pool.query(
+          "UPDATE users SET password=$1 WHERE id=$2",
+          [hased, id]
+        );
+        if (query.rowCount < 1) {
+          return 0;
+        }
+        return 1;
+      }
+    } catch (error) {
+      console.log(error);
+      return -2;
     }
   }
 }
