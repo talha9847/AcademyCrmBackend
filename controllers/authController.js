@@ -2,8 +2,13 @@ const userRepository = require("../repository/userRepository");
 const authMiddleware = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
-const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
+const axios = require("axios");
+const { wrapper } = require("axios-cookiejar-support");
+const { CookieJar } = require("tough-cookie");
+
+const jar = new CookieJar();
+const client = wrapper(axios.create({ jar, withCredentials: true }));
 
 async function login(req, res) {
   try {
@@ -88,22 +93,27 @@ async function logout(req, res) {
 }
 
 async function fetchECITable(url) {
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  // 1) Warm up → required for cookies
+  await client.get("https://results.eci.gov.in/", {
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+      Accept: "text/html",
+      Referer: "https://results.eci.gov.in/",
+    },
   });
 
-  const page = await browser.newPage();
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-  );
+  // 2) Now fetch the required page
+  const response = await client.get(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+      Accept: "text/html",
+      Referer: "https://results.eci.gov.in/",
+    },
+  });
 
-  await page.goto(url, { waitUntil: "networkidle2", timeout: 0 });
-  const html = await page.content();
-
-  await browser.close();
-  return html;
+  return response.data;
 }
+
 function parseMargins(html, maxMargin = 2500) {
   const $ = cheerio.load(html);
   const rows = [];
@@ -222,6 +232,7 @@ async function getAllCloseContests(req, res) {
     return res.status(500).json({
       status: "errorss",
       message: err.message,
+      mes: err,
     });
   }
 }
