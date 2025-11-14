@@ -7,6 +7,7 @@ const axios = require("axios");
 const { wrapper } = require("axios-cookiejar-support");
 const { CookieJar } = require("tough-cookie");
 
+
 const jar = new CookieJar();
 const client = wrapper(axios.create({ jar, withCredentials: true }));
 
@@ -232,7 +233,6 @@ async function getAllCloseContests(req, res) {
     return res.status(500).json({
       status: "errorss",
       message: err.message,
-      mes: err,
     });
   }
 }
