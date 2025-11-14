@@ -2,55 +2,196 @@ const userRepository = require("../repository/userRepository");
 const authMiddleware = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
+const puppeteer = require("puppeteer");
+const cheerio = require("cheerio");
 
 async function login(req, res) {
-  const { email, password } = req.body;
-  const user = await userRepository.login(email, password);
-  if (!user) {
-    return res.status(401).json({ message: "Invalid Email or Password" });
+  try {
+    const { email, password } = req.body;
+    const user = await userRepository.login(email, password);
+    if (!user) {
+      return res.status(401).json({ message: "Invalid Email or Password" });
+    }
+
+    const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "30d" });
+    res.clearCookie("token");
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    return res.json({
+      role: user.role,
+      name: user.fullName,
+      email: user.email,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error", success: false });
   }
-
-  const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "30d" });
-  res.clearCookie("token");
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  });
-
-  return res.json({ role: user.role, name: user.fullName, email: user.email });
 }
 
 async function checkAccess(req, res) {
-  const { slug } = req.body;
-  const user = await authMiddleware.foundClaims(req);
-  if (!user) {
-    return res.status(401).json({ message: "We are sorry this time" });
-  }
-  const result = await pool.query(
-    "SELECT p.name, p.slug FROM pages p JOIN user_page_access u ON u.page_id=p.id WHERE u.user_id=$1 and u.is_enabled='true'",
-    [user.id]
-  );
+  try {
+    const { slug } = req.body;
+    const user = await authMiddleware.foundClaims(req);
+    if (!user) {
+      return res.status(401).json({ message: "We are sorry this time" });
+    }
+    const result = await pool.query(
+      "SELECT p.name, p.slug FROM pages p JOIN user_page_access u ON u.page_id=p.id WHERE u.user_id=$1 and u.is_enabled='true'",
+      [user.id]
+    );
 
-  const allowedSlugs = result.rows.map((p) => p.slug);
-  if (!allowedSlugs.includes(slug)) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+    const allowedSlugs = result.rows.map((p) => p.slug);
+    if (!allowedSlugs.includes(slug)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
-  res.json({ message: "Access granted" });
+    res.json({ message: "Access granted" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error", success: false });
+  }
 }
 
 async function checkRoleAccess(req, res) {
-  const { role } = req.body;
-  const user = await authMiddleware.foundClaims(req);
-  if (!user) {
-    return res.status(401).json({ message: "User not logged in" });
+  try {
+    const { role } = req.body;
+    const user = await authMiddleware.foundClaims(req);
+    if (!user) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+    if (user.role != role) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    return res.json({ message: "Access granted" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error", success: false });
   }
-  if (user.role != role) {
-    return res.status(403).json({ message: "Access denied" });
-  }
-  return res.json({ message: "Access granted" });
 }
 
-module.exports = { login, checkAccess, checkRoleAccess };
+async function logout(req, res) {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none", // use "strict" in production unless using cross-site cookies
+    });
+    return res
+      .status(200)
+      .json({ message: "Logged out successfully", success: true });
+  } catch (error) {
+    console.error("Logout error:", error);
+    return res.status(500).json({ message: "Logout failed", success: false });
+  }
+}
+
+async function fetchECITable(url) {
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  const page = await browser.newPage();
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+  );
+
+  await page.goto(url, { waitUntil: "networkidle2", timeout: 0 });
+  const html = await page.content();
+
+  await browser.close();
+  return html;
+}
+function parseMargins(html, maxMargin = 2500) {
+  const $ = cheerio.load(html);
+  const rows = [];
+
+  $("table.table.table-striped.table-bordered tbody tr").each((i, el) => {
+    // Only select direct child <td> (ignore nested table cells)
+    const tds = $(el).children("td");
+
+    if (tds.length < 9) return;
+
+    const margin = parseInt($(tds[6]).text().trim().replace(/,/g, ""), 10);
+
+    if (!margin || margin > maxMargin) return;
+
+    rows.push({
+      constituency: $(tds[0]).text().trim(),
+      constNo: $(tds[1]).text().trim(),
+      leadingCandidate: $(tds[2]).text().trim(),
+
+      leadingParty: $(tds[3])
+        .children("table")
+        .find("td")
+        .first()
+        .text()
+        .trim(),
+
+      trailingCandidate: $(tds[4]).text().trim(),
+
+      trailingParty: $(tds[5])
+        .children("table")
+        .find("td")
+        .first()
+        .text()
+        .trim(),
+
+      margin,
+      round: $(tds[7]).text().trim(),
+      status: $(tds[8]).text().trim(),
+    });
+  });
+
+  return rows;
+}
+
+// ==========================
+// FINAL API ENDPOINT
+// ==========================
+async function getCloseContests(req, res) {
+  const { id } = req.params;
+  const urls = [
+    `https://results.eci.gov.in/ResultAcGenNov2025/statewiseS${id}.htm`,
+    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS042.htm",
+    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS043.htm",
+    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS044.htm",
+    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS045.htm",
+  ];
+
+  let all = [];
+
+  try {
+    let i = 1;
+    for (const url of urls) {
+      const html = await fetchECITable(url);
+      if (i == 1) {
+      }
+      i++;
+      const filtered = await parseMargins(html);
+      all.push(...filtered);
+    }
+
+    return res.json({
+      status: "success",
+      total: all.length,
+      timestamp: new Date().toISOString(),
+      contests: all,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: "error",
+      message: err.message,
+    });
+  }
+}
+
+module.exports = {
+  login,
+  checkAccess,
+  checkRoleAccess,
+  logout,
+  getCloseContests,
+};

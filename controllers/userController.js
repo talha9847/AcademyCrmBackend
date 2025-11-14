@@ -5,6 +5,7 @@ const fs = require("fs");
 const pool = require("../config/db");
 const authMiddleware = require("../middleware/auth");
 const { pid } = require("process");
+const bcrypt = require("bcrypt");
 
 async function GetAllStudents(req, res) {
   const result = await userRepository.GetAllStudents();
@@ -569,6 +570,51 @@ async function updateTeacherProfile(req, res) {
     return res.status(500).json({ message: "Server error", success: false });
   }
 }
+async function changeAdminPassword(req, res) {
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+  if (!currentPassword || !newPassword || !confirmNewPassword) {
+    return res
+      .status(500)
+      .json({ messsage: "All fields are required", success: false });
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    return res
+      .status(233)
+      .json({ messsage: "Password do not match", success: false });
+  }
+
+  try {
+    const user = await authMiddleware.foundClaims(req);
+    if (!user) {
+      return res.status(234).json({ message: "Sorry", success: false });
+    }
+    const firstQuery = await pool.query(
+      "SELECT password FROM users WHERE id=$1",
+      [user.id]
+    );
+    const compare = await bcrypt.compare(
+      currentPassword,
+      firstQuery.rows[0].password
+    );
+    if (!compare) {
+      return res.status(240).json({ message: "Current password is not valid" });
+    }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const query = await pool.query("UPDATE users SET password=$1 WHERE id=$2", [
+      hashed,
+      user.id,
+    ]);
+    if (query.rowCount < 1) {
+      return res.status.json({ message: "Error occured", success: false });
+    }
+    return res
+      .status(200)
+      .json({ message: "Changed successfully", success: true });
+  } catch (error) {
+    return res.status.json({ message: "Error occured", success: false });
+  }
+}
 
 module.exports = {
   GetAllStudents,
@@ -585,4 +631,5 @@ module.exports = {
   updateGenderAndAddressOfTeacher,
   updateHireDateAndDesignationOfTeacher,
   updateTeacherProfile,
+  changeAdminPassword,
 };

@@ -524,15 +524,50 @@ async function changePassword(req, res) {
       .json({ message: "Internal server error", succees: false });
   }
 }
-
-async function deleteStudent(req, res) {
-  const { userId } = req.body;
+async function changePasswordByAdmin(req, res) {
+  const { newPassword, confirmPassword, id } = req.body;
   try {
-    const query=await pool.query()
+    if (!newPassword || !confirmPassword) {
+      return res
+        .status(402)
+        .json({ succees: false, message: "Both Fields Are Required" });
+    }
+    if (newPassword !== confirmPassword) {
+      return res
+        .status(403)
+        .json({ message: "Both password must be same", succees: false });
+    }
+
+    const result = await studentRepository.changePassword(newPassword, id);
+
+    if (result == -1) {
+      return res.status(233).json({
+        message: "Your password is as same as previous",
+        succees: false,
+      });
+    }
+    if (result == 1) {
+      return res
+        .status(200)
+        .json({ message: "Password updated successfully", succees: true });
+    }
+
+    return res
+      .status(500)
+      .json({ message: "Error in updating password", succees: false });
   } catch (error) {
-    
+    return res
+      .status(500)
+      .json({ message: "Internal server error", succees: false });
   }
 }
+
+// async function deleteStudent(req, res) {
+//   const { userId } = req.body;
+//   try {
+//     const query = await pool.query();
+//   } catch (error) {}
+// }
 
 module.exports = {
   profile,
@@ -552,4 +587,5 @@ module.exports = {
   statusUpdate,
   updateFee,
   changePassword,
+  changePasswordByAdmin,
 };

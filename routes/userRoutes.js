@@ -64,4 +64,10 @@ router.put(
   userController.updateTeacherProfile
 );
 
+router.post(
+  "/changeAdminPassword",
+  authMiddleware(["admin"]),
+  userController.changeAdminPassword
+);
+
 module.exports = router;
