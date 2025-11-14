@@ -220,7 +220,7 @@ async function getAllCloseContests(req, res) {
     });
   } catch (err) {
     return res.status(500).json({
-      status: "error",
+      status: "errorss",
       message: err.message,
     });
   }
