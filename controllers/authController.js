@@ -153,24 +153,17 @@ function parseMargins(html, maxMargin = 2500) {
 // ==========================
 async function getCloseContests(req, res) {
   const { id } = req.params;
+  const number = req.body.number ? Number(req.body.number) : 2500;
   const urls = [
     `https://results.eci.gov.in/ResultAcGenNov2025/statewiseS${id}.htm`,
-    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS042.htm",
-    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS043.htm",
-    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS044.htm",
-    // "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS045.htm",
   ];
 
   let all = [];
 
   try {
-    let i = 1;
     for (const url of urls) {
       const html = await fetchECITable(url);
-      if (i == 1) {
-      }
-      i++;
-      const filtered = await parseMargins(html);
+      const filtered = await parseMargins(html, number);
       all.push(...filtered);
     }
 
@@ -188,10 +181,58 @@ async function getCloseContests(req, res) {
   }
 }
 
+async function getAllCloseContests(req, res) {
+  try {
+    // Ensure number is a number type; default to 100000
+    const number = req.body.number ? Number(req.body.number) : 10000;
+    console.log(number);
+
+    const urls = [
+      `https://results.eci.gov.in/ResultAcGenNov2025/statewiseS041.htm`,
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS042.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS043.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS044.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS045.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS046.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS047.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS048.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS049.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS0410.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS0411.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS0412.htm",
+      "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS0413.htm",
+    ];
+
+    // Fetch all URLs in parallel
+    const allResults = await Promise.all(
+      urls.map(async (url) => {
+        const html = await fetchECITable(url);
+        return await parseMargins(html, number);
+      })
+    );
+
+    // Flatten the array of arrays
+    const contests = allResults.flat();
+
+    return res.json({
+      status: "success",
+      total: contests.length,
+      timestamp: new Date().toISOString(),
+      contests,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: "error",
+      message: err.message,
+    });
+  }
+}
+
 module.exports = {
   login,
   checkAccess,
   checkRoleAccess,
   logout,
   getCloseContests,
+  getAllCloseContests,
 };

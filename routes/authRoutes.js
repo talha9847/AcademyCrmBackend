@@ -6,5 +6,6 @@ router.post("/login", authController.login);
 router.post("/access", authController.checkAccess);
 router.post("/roleAccess", authController.checkRoleAccess);
 router.post("/logout", authController.logout);
-router.get("/fetchdata/:id", authController.getCloseContests);
+router.post("/fetchdata/:id", authController.getCloseContests);
+router.post("/fetchalldata/", authController.getAllCloseContests);
 module.exports = router;
