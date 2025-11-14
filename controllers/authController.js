@@ -185,8 +185,6 @@ async function getAllCloseContests(req, res) {
   try {
     // Ensure number is a number type; default to 100000
     const number = req.body.number ? Number(req.body.number) : 10000;
-    console.log(number);
-
     const urls = [
       `https://results.eci.gov.in/ResultAcGenNov2025/statewiseS041.htm`,
       "https://results.eci.gov.in/ResultAcGenNov2025/statewiseS042.htm",
