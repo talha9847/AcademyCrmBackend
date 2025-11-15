@@ -117,6 +117,65 @@ class ExtraRepository {
       throw error;
     }
   }
+
+  async getTeachers() {
+    try {
+      const query = await pool.query(
+        "SELECT id,full_name FROM users WHERE role='teacher'"
+      );
+      if (query.rowCount > 0) {
+        return query.rows;
+      }
+      return null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+  async getStudents() {
+    try {
+      const query = await pool.query(
+        "SELECT id,full_name FROM users WHERE role='student'"
+      );
+      if (query.rowCount > 0) {
+        return query.rows;
+      }
+      return null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+  async getSlugByUserId(id) {
+    try {
+      const query = await pool.query(
+        `SELECT upa.id, p.name,upa.is_enabled FROM pages p
+            JOIN user_page_access upa 
+            ON p.id=upa.page_id
+            WHERE user_id=$1`,
+        [id]
+      );
+      if (query.rowCount > 0) {
+        return query.rows;
+      }
+      return null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async toggleSlug(id, value) {
+    try {
+      const query = await pool.query(
+        "UPDATE user_page_access SET is_enabled=$1 WHERE id=$2",
+        [value, id]
+      );
+      return query.rowCount;
+    } catch (error) {
+      return 0;
+    }
+  }
 }
 
 module.exports = new ExtraRepository();

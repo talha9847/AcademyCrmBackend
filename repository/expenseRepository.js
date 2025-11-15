@@ -25,6 +25,8 @@ class ExpenseRepository {
       throw error;
     }
   }
+
+
 }
 
 module.exports = new ExpenseRepository();

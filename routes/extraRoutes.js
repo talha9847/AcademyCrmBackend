@@ -5,7 +5,7 @@ const authMiddleware = require("../middleware/auth");
 
 router.get(
   "/getClasses",
-  authMiddleware.authMiddleware("admin"),
+  authMiddleware.authMiddleware(["admin", "teacher"]),
   extras.getAllClasses
 );
 
@@ -33,7 +33,7 @@ router.post(
 
 router.get(
   "/getSessions",
-  authMiddleware.authMiddleware("admin"),
+  authMiddleware.authMiddleware(["admin", "teacher"]),
   extras.getAllSessions
 );
 
@@ -47,6 +47,26 @@ router.get(
   "/getSectionById",
   authMiddleware.authMiddleware("admin"),
   extras.getSectionById
+);
+router.get(
+  "/getTeachers",
+  authMiddleware.authMiddleware(["admin"]),
+  extras.getTeachers
+);
+router.get(
+  "/getStudents",
+  authMiddleware.authMiddleware(["admin"]),
+  extras.getStudents
+);
+router.post(
+  "/getSlugByUserId",
+  authMiddleware.authMiddleware(["admin"]),
+  extras.getSlugByUserId
+);
+router.put(
+  "/toggleSlug",
+  authMiddleware.authMiddleware(["admin"]),
+  extras.toggleSlug
 );
 
 module.exports = router;

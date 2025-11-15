@@ -98,10 +98,6 @@ class UserRepository {
       );
       let studentId = student.rows[0].id;
 
-      console.log(
-        "kd flkdjfl kdjf d;lj f;lkdj;lkfd j;lk fj;lkdj fkdjlkf jdlhfjlikdjf;lk ds;kfj ;lkdj; djf;lkd jfkdsj;lkj;dkj"
-      );
-
       await client.query(
         "INSERT INTO student_fees(student_id,total_fee,due_date,discount,description) VALUES($1,$2,$3,$4,$5) RETURNING *",
         [studentId, totalFee, dueDate, discount, description]

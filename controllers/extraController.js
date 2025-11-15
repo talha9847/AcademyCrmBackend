@@ -2,6 +2,8 @@ const extraRepository = require("../repository/extraRepository");
 const { createCanvas, loadImage } = require("canvas");
 const fs = require("fs");
 const path = require("path");
+const pool = require("../config/db");
+const studentRepository = require("../repository/studentRepository");
 
 async function getAllClasses(req, res) {
   try {
@@ -172,6 +174,69 @@ async function generateCertificate(name) {
   }
 }
 
+async function getTeachers(req, res) {
+  try {
+    const result = await extraRepository.getTeachers();
+    if (!result) {
+      return res
+        .status(500)
+        .json({ message: "this is not good", success: false });
+    }
+
+    return res.status(200).json({ message: "Ok", success: true, data: result });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "this is not good", success: false });
+  }
+}
+async function getStudents(req, res) {
+  try {
+    const result = await extraRepository.getStudents();
+    if (!result) {
+      return res
+        .status(500)
+        .json({ message: "this is not good", success: false });
+    }
+
+    return res.status(200).json({ message: "Ok", success: true, data: result });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "this is not good", success: false });
+  }
+}
+async function getSlugByUserId(req, res) {
+  const { id } = req.body;
+  try {
+    const result = await extraRepository.getSlugByUserId(id);
+    if (!result) {
+      return res
+        .status(500)
+        .json({ message: "this is not good", success: false });
+    }
+
+    return res.status(200).json({ message: "Ok", success: true, data: result });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "this is not good", success: false });
+  }
+}
+
+async function toggleSlug(req, res) {
+  const { id, value } = req.body;
+  try {
+    const result = await extraRepository.toggleSlug(id, value);
+    if (result < 1) {
+      return res.status(500).json({ message: "Error occured", success: false });
+    }
+    return res.status(200).json({ message: "Ok", success: true });
+  } catch (error) {
+    return res.status(500).json({ message: "Error occured", success: false });
+  }
+}
+
 module.exports = {
   getAllClasses,
   getAllSessions,
@@ -182,4 +247,8 @@ module.exports = {
   addClass,
   updateSessions,
   addSession,
+  getTeachers,
+  getSlugByUserId,
+  toggleSlug,
+  getStudents,
 };

@@ -4,6 +4,14 @@ const middleware = require("../middleware/auth");
 class AttendanceRepository {
   async addDailyAttendance(classId, date, sessionId, sectionId, teacherId) {
     let attendanceId;
+    const query_teacher_id = await pool.query(
+      "SELECT id FROM teachers WHERE user_id=$1",
+      [teacherId]
+    );
+    const teacher_Id =
+      query_teacher_id.rows.length > 0
+        ? query_teacher_id.rows[0].id
+        : teacherId;
     try {
       const query = await pool.query(
         "SELECT id from daily_attendance WHERE class_id=$1 AND attendance_date=$2 AND session_id=$3",
@@ -32,7 +40,7 @@ class AttendanceRepository {
           await client.query("BEGIN");
           const query = await client.query(
             "INSERT INTO daily_attendance (class_id,teacher_id,attendance_date,session_id) VALUES($1,$2,$3,$4) RETURNING id",
-            [classId, teacherId, date, sessionId]
+            [classId, teacher_Id, date, sessionId]
           );
           attendanceId = query.rows[0].id;
           const query2 = await client.query(
