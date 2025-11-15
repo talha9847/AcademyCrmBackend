@@ -304,8 +304,7 @@ class UserRepository {
   async getTeacherProfile(userId) {
     try {
       const query = await pool.query(
-        ` SELECT u.full_name,u.email,t.hire_date,t.department,t.gender,t.staff_id,t.designation,t.address,t.profile_photo
-            FROM users u JOIN teachers t ON t.user_id=u.id WHERE u.id=$1`,
+        ` SELECT u.full_name,u.email,t.hire_date,t.department,t.gender,t.staff_id,t.designation,t.address,t.profile_photo,t.mobile,t.birthdate FROM users u JOIN teachers t ON t.user_id=u.id WHERE u.id=$1`,
         [userId]
       );
 
