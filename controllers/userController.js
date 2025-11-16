@@ -207,7 +207,7 @@ async function createStudent(req, res) {
     const currentYear = new Date().getFullYear();
 
     if (query.rows.length > 0) {
-      const lastAdm = query.rows[0].admission_number; // e.g., MCA-ADM-2025-003
+      const lastAdm = query.rows[0].admission_number; 
 
       // Split format: PREFIX-YEAR-SERIAL
       const parts = lastAdm.split("-");
