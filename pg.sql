@@ -345,6 +345,7 @@ CREATE TABLE fee_payments (
     payment_method VARCHAR(20),
     status VARCHAR(20) DEFAULT 'Paid',
     receipt_number VARCHAR(25) UNIQUE NOT NULL,
+    transaction_id, VARCHAR(25) UNIQUE NOT NULL
     
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (student_fee_id) REFERENCES student_fees(id) ON DELETE CASCADE
