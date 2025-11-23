@@ -8,5 +8,6 @@ router.post("/getFeesPaymentById", feesController.getFeePaymentsById);
 router.get("/fetchFeesByStudent", feesController.fetchFeesByStudent);
 router.get("/feesByStudent", feesController.feesByStudent);
 router.post ("/payFees", feesController.payFees);
+router.post ("/createOrder", feesController.createOrder);
 
 module.exports = router;

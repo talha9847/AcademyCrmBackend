@@ -335,20 +335,47 @@ INSERT INTO parents (
 );
 
 
-
 CREATE TABLE fee_payments (
     id SERIAL PRIMARY KEY,
-    student_id INTEGER,
-    student_fee_id INTEGER,
-    amount_paid NUMERIC(10, 2) NOT NULL,
+
+    -- Razorpay online payments
+    order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+    razorpay_payment_id VARCHAR(100),
+    razorpay_signature TEXT,
+
+    -- Manual payments (cash / cheque / offline)
+    student_id INTEGER REFERENCES students(id),
+    student_fee_id INTEGER REFERENCES student_fees(id),
+
+    amount_paid NUMERIC(10,2) NOT NULL,
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    payment_method VARCHAR(20),
-    status VARCHAR(20) DEFAULT 'Paid',
+
+    payment_method VARCHAR(20) NOT NULL,   -- RAZORPAY / CASH / CHEQUE / UPI
+    status VARCHAR(20) NOT NULL,           -- PAID / PENDING / FAILED / REFUNDED
+
     receipt_number VARCHAR(25) UNIQUE NOT NULL,
-    transaction_id, VARCHAR(25) UNIQUE NOT NULL
-    
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_fee_id) REFERENCES student_fees(id) ON DELETE CASCADE
+    transaction_id VARCHAR(50) UNIQUE NOT NULL
+);
+
+
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+
+    razorpay_order_id VARCHAR(100) NOT NULL UNIQUE,  -- Razorpay generated order ID
+
+    student_id INTEGER NOT NULL 
+        REFERENCES students(id) ON DELETE CASCADE,
+
+    student_fee_id INTEGER NOT NULL 
+        REFERENCES student_fees(id) ON DELETE CASCADE,
+
+    amount NUMERIC(10,2) NOT NULL,                   -- amount for this order
+    currency VARCHAR(10) DEFAULT 'INR',
+
+    status VARCHAR(20) DEFAULT 'created',            -- created | paid | failed | refunded
+    attempts INTEGER DEFAULT 0,                      -- number of attempts to pay
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO fee_payments (student_id, student_fee_id,amount_paid,payment_method) VALUES (7,5,5000.00,'Cash');

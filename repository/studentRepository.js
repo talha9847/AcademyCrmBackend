@@ -21,7 +21,7 @@ class studentRepository {
 	        s.gender,
             p.full_name,
 	        p.phone,
-	        p.email,
+	        p.email as parent_email,
 	        p.relation,
 	        p.occupation,
 	        p.address,
