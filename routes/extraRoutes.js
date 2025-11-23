@@ -68,5 +68,15 @@ router.put(
   authMiddleware.authMiddleware(["admin"]),
   extras.toggleSlug
 );
+router.post(
+  "/getCertificateById",
+  authMiddleware.authMiddleware(["admin"]),
+  extras.getCertificateById
+);
 
+router.put(
+  "/updateCertificate",
+  authMiddleware.authMiddleware(["admin"]),
+  extras.updateCertificate
+);
 module.exports = router;

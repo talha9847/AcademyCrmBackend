@@ -41,6 +41,22 @@ async function getTemplatesByClass(req, res) {
   }
 }
 
+async function getAllTemplates(req, res) {
+  try {
+    const query = await pool.query(`SELECT id, name FROM templates`);
+    if (query.rowCount < 1) {
+      return res
+        .status(500)
+        .json({ message: "Error not found", succees: false });
+    }
+    return res
+      .status(200)
+      .json({ message: "Good one", succees: true, data: query.rows });
+  } catch (error) {
+    return res.status(500).json({ message: "Error not found", succees: false });
+  }
+}
+
 async function getStudentByClassAndSession(req, res) {
   try {
     const { classId, sessionId } = req.body;
@@ -572,6 +588,7 @@ async function changePasswordByAdmin(req, res) {
 module.exports = {
   profile,
   getTemplatesByClass,
+  getAllTemplates,
   getStudentByClassAndSession,
   assignCertificate,
   getAllAssignedCertificates,

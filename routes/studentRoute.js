@@ -5,6 +5,7 @@ const upload = require("../middleware/upload");
 
 router.get("/profile", studetController.profile);
 router.post("/getTemplates", studetController.getTemplatesByClass);
+router.get("/getAllTemplates", studetController.getAllTemplates);
 router.post(
   "/getStudentByClassAndSession",
   studetController.getStudentByClassAndSession

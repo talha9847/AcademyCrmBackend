@@ -237,6 +237,39 @@ async function toggleSlug(req, res) {
   }
 }
 
+async function getCertificateById(req, res) {
+  try {
+    const { id } = req.body;
+    const result = await extraRepository.getCertificateById(id);
+    if (!result) {
+      return res.status(500).json({ message: "Error", success: false });
+    }
+    return res
+      .status(200)
+      .json({ success: true, message: "Found Successfully", data: result });
+  } catch (error) {
+    return res.status(500).json({ message: "Error", success: false });
+  }
+}
+
+async function updateCertificate(req, res) {
+  const { title, description, isRevoked, templateId, id } = req.body;
+  try {
+    const query = await pool.query(
+      "UPDATE certificates SET title=$1,description=$2,is_revoked=$3,template_id=$4 WHERE id=$5",
+      [title, description, isRevoked, templateId, id]
+    );
+    if (query.rowCount < 1) {
+      return res
+        .status(500)
+        .json({ message: "There is error", success: false });
+    }
+    return res.status(200).json({ message: "It is good", success: true });
+  } catch (error) {
+    return res.status(500).json({ message: "There is error", success: false });
+  }
+}
+
 module.exports = {
   getAllClasses,
   getAllSessions,
@@ -251,4 +284,6 @@ module.exports = {
   getSlugByUserId,
   toggleSlug,
   getStudents,
+  getCertificateById,
+  updateCertificate,
 };

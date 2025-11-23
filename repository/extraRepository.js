@@ -176,6 +176,21 @@ class ExtraRepository {
       return 0;
     }
   }
+
+  async getCertificateById(certificateId) {
+    try {
+      const query = await pool.query(
+        "SELECT c.certificate_number,c.title,c.description,c.is_revoked,c.verification_code,t.name,c.template_id FROM certificates c JOIN templates t ON c.template_id=t.id WHERE c.id=$1",
+        [certificateId]
+      );
+      if (query.rowCount < 1) {
+        return null;
+      }
+      return query.rows[0];
+    } catch (error) {
+      return null;
+    }
+  }
 }
 
 module.exports = new ExtraRepository();
