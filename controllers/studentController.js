@@ -578,12 +578,131 @@ async function changePasswordByAdmin(req, res) {
   }
 }
 
-// async function deleteStudent(req, res) {
-//   const { userId } = req.body;
-//   try {
-//     const query = await pool.query();
-//   } catch (error) {}
-// }
+async function getDashboardData(req, res) {
+  try {
+    const user = await middleware.foundClaims(req);
+    if (!user) {
+      return res
+        .status(500)
+        .json({ message: "You are unauthorized", succees: false });
+    }
+    const sId = await attendanceRepository.getStudentIdFromUserId(user.id);
+    const studentId = sId[0].id;
+    const query = await pool.query(
+      `WITH student_base AS (
+    SELECT 
+        s.id AS student_id,
+        u.full_name AS name,
+        u.email,
+        s.class_id,
+        s.section_id,
+        s.profile_photo,
+        s.admission_number
+    FROM students s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.id = $1  -- pass student_id
+),
+
+attendance_stats AS (
+    SELECT 
+        dr.student_id,
+        ROUND(
+            (SUM(CASE WHEN dr.status = 'Present' THEN 1 ELSE 0 END)::decimal 
+            / NULLIF(COUNT(*), 0)) * 100, 2
+        ) AS attendance_percentage
+    FROM daily_attendance_records dr
+    GROUP BY dr.student_id
+),
+
+attendance_history AS (
+    SELECT 
+        dr.student_id,
+        da.attendance_date,
+        dr.status
+    FROM daily_attendance_records dr
+    JOIN daily_attendance da ON da.id = dr.attendance_id
+    WHERE dr.student_id = $1
+    ORDER BY da.attendance_date DESC
+    LIMIT 5
+),
+
+fee_summary AS (
+    SELECT 
+        sf.student_id,
+        COALESCE(SUM(amount_paid),0) AS total_paid, 
+        sf.total_fee - (sf.discount*sf.total_fee/100) AS total_fee,
+        (sf.total_fee - (sf.discount*sf.total_fee/100) -COALESCE(SUM(amount_paid),0)) AS pending_amount,
+        sf.discount,
+        MAX(fp.payment_date) AS last_payment_date
+      FROM student_fees sf
+      JOIN fee_payments fp ON fp.student_id=sf.student_id
+      WHERE sf.student_id=25
+      GROUP by sf.student_id, sf.total_fee,sf.discount
+),
+
+latest_certificate AS (
+    SELECT 
+        c.recipient_id AS student_id,
+        c.title,
+        c.certificate_number,
+        c.issue_date,
+        c.verification_code
+    FROM certificates c
+    WHERE c.recipient_id = $1
+    ORDER BY c.issue_date DESC
+    LIMIT 1
+)
+
+SELECT 
+    sb.*,
+
+    -- Attendance %
+    COALESCE(a.attendance_percentage, 0) || '%' AS attendance_percentage,
+
+    -- Attendance last 5 days (JSON)
+    (
+        SELECT json_agg(
+            json_build_object(
+                'date', attendance_date,
+                'status', status
+            )
+        )
+        FROM attendance_history
+    ) AS attendance_history,
+
+    -- Fee details
+    fs.total_fee,
+    fs.total_paid,
+    fs.pending_amount,
+    fs.last_payment_date,
+
+    -- Latest certificate
+    lc.title AS certificate_title,
+    lc.certificate_number,
+    lc.verification_code,
+    lc.issue_date AS certificate_issue_date
+
+FROM student_base sb
+LEFT JOIN attendance_stats a ON a.student_id = sb.student_id
+LEFT JOIN fee_summary fs ON fs.student_id = sb.student_id
+LEFT JOIN latest_certificate lc ON lc.student_id = sb.student_id;
+`,
+      [studentId]
+    );
+
+    if (query.rowCount < 1) {
+      return res.status(500).json({ message: "Erorr found", succees: false });
+    }
+    return res
+      .status(200)
+      .json({ message: "Very good", succees: true, data: query.rows });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "some error occured", succees: false });
+  }
+}
 
 module.exports = {
   profile,
@@ -605,4 +724,5 @@ module.exports = {
   updateFee,
   changePassword,
   changePasswordByAdmin,
+  getDashboardData,
 };

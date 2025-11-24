@@ -59,5 +59,6 @@ router.post("/statusUpdate", studetController.statusUpdate);
 router.post("/updateFee", studetController.updateFee);
 router.post("/changePassword", studetController.changePassword);
 router.post("/changePasswordByAdmin", studetController.changePasswordByAdmin);
+router.get("/getDashboardData", studetController.getDashboardData);
 
 module.exports = router;

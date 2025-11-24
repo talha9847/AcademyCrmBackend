@@ -148,6 +148,7 @@ class UserRepository {
          s.admission_number,
          s.date_of_birth,
          s.roll_no,
+         s.created_at,
          s.address AS student_address,
          s.profile_photo,
          s.signature_photo,
