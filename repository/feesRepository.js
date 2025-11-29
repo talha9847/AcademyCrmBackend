@@ -13,38 +13,20 @@ class FeesRepository {
     sf.due_date,
     sf.total_fee AS total_fees,
 
-    COALESCE(
-        SUM(
-            CASE
-                WHEN fp.amount_paid IS NOT NULL THEN fp.amount_paid
-                ELSE 0
-            END
-        ),
-        0
-    ) AS paid_amount,
+    COALESCE(SUM(fp.amount_paid), 0) AS paid_amount,
 
     (
         sf.total_fee
         - (sf.total_fee * sf.discount / 100)
-        - COALESCE(
-            SUM(
-                CASE
-                    WHEN fp.amount_paid IS NOT NULL THEN fp.amount_paid
-                    ELSE 0
-                END
-            ), 
-            0
-        )
+        - COALESCE(SUM(fp.amount_paid), 0)
     ) AS due_amount
 
 FROM student_fees sf
 JOIN students s ON sf.student_id = s.id
 JOIN users u ON s.user_id = u.id
 
-LEFT JOIN orders o ON o.student_fee_id = sf.id      
 LEFT JOIN fee_payments fp 
-       ON fp.order_id = o.id                        
-       OR fp.student_fee_id = sf.id                 
+       ON fp.student_fee_id = sf.id   -- correct link
 
 GROUP BY 
     sf.id,
