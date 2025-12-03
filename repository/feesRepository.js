@@ -89,18 +89,10 @@ GROUP BY
   async getDueAmountByStudentId(studentId) {
     try {
       const result = await pool.query(
-        `SELECT 
-          sf.total_fee 
-          - (sf.total_fee * sf.discount / 100)
-          - COALESCE(SUM(fp.amount_paid), 0) AS due_amount
-       FROM student_fees sf
-       LEFT JOIN orders o 
-          ON o.student_fee_id = sf.id
-       LEFT JOIN fee_payments fp 
-          ON fp.student_fee_id = sf.id 
-          OR fp.order_id = o.id
-       WHERE sf.student_id = $1
-       GROUP BY sf.total_fee, sf.discount`,
+        `SELECT COALESCE ( (sf.total_fee - (sf.total_fee*sf.discount/100) -(sum(fp.amount_paid)) ),0) as total_fee FROM student_fees sf
+  JOIN fee_payments fp ON sf.student_id=fp.student_id
+  WHERE sf.student_id=$1
+  GROUP BY sf.total_fee,sf.discount`,
         [studentId]
       );
 
