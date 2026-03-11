@@ -27,14 +27,14 @@ async function createOrder(req, res) {
     }
 
     const studentId = await attendanceRepository.getStudentIdFromUserId(
-      user.id
+      user.id,
     );
 
     const queryOne = await pool.query(
       `
     select id from student_fees  WHERE student_id=$1
   `,
-      [studentId[0].id]
+      [studentId[0].id],
     );
 
     if (queryOne.rowCount > 0) {
@@ -46,7 +46,7 @@ async function createOrder(req, res) {
         `INSERT INTO orders (razorpay_order_id, student_id, student_fee_id, amount, status)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
-        [order.id, studentId[0].id, feeId, amount, "created"]
+        [order.id, studentId[0].id, feeId, amount, "created"],
       );
 
       const dbOrderId = inserted.rows[0].id;
@@ -115,7 +115,7 @@ async function collectFee(req, res) {
     }
 
     const query = await pool.query(
-      `  SELECT receipt_number FROM fee_payments ORDER BY payment_date DESC LIMIT 1`
+      `  SELECT receipt_number FROM fee_payments ORDER BY payment_date DESC LIMIT 1`,
     );
     const output = query.rows[0].receipt_number;
     const prefix = "MCA-ADM";
@@ -139,7 +139,7 @@ async function collectFee(req, res) {
     }
 
     const txnQuery = await pool.query(
-      "SELECT transaction_id FROM fee_payments ORDER BY payment_date DESC LIMIT 1"
+      "SELECT transaction_id FROM fee_payments ORDER BY payment_date DESC LIMIT 1",
     );
     const txnOutput = txnQuery.rows[0].transaction_id;
     const txnPrefix = "TXN";
@@ -153,12 +153,13 @@ async function collectFee(req, res) {
       if (lastYear == txnCurrentYear) {
         const newSerial = String(number + 1).padStart(3, "0");
         transactionId = `${txnPrefix}-${currentYear}-${newSerial}`;
+      } else {
+        transactionId = `${txnPrefix}-${currentYear}-001`;
       }
-    } else {
-      transactionId = `${txnPrefix}-${currentYear}-001`;
     }
 
     if (!transactionId || !receipt_number) {
+      console.log(" i m adkljlk; jkl");
       return res.status(400).json({
         message: "All fields are required",
         success: false,
@@ -172,7 +173,7 @@ async function collectFee(req, res) {
       method,
       status,
       receipt_number,
-      transactionId
+      transactionId,
     );
     if (!result) {
       return res
@@ -211,7 +212,7 @@ async function fetchFeesByStudent(req, res) {
   try {
     const user = await foundClaims(req);
     const studentId = await attendanceRepository.getStudentIdFromUserId(
-      user.id
+      user.id,
     );
     if (!studentId[0].id || isNaN(studentId[0].id)) {
       return res.status(256).json({ message: "unauthorized", success: false });
@@ -232,7 +233,7 @@ async function feesByStudent(req, res) {
   try {
     const user = await foundClaims(req);
     const studentId = await attendanceRepository.getStudentIdFromUserId(
-      user.id
+      user.id,
     );
     const result = await feesRepository.getFeePaymentsById(studentId[0].id);
     if (!result) {
@@ -354,12 +355,12 @@ async function payFees(req, res) {
     }
 
     const studentId = await attendanceRepository.getStudentIdFromUserId(
-      user.id
+      user.id,
     );
 
     const queryOne = await pool.query(
       `select id from student_fees  WHERE student_id=$1`,
-      [studentId[0].id]
+      [studentId[0].id],
     );
     if (queryOne.rowCount > 0) {
       feeId = queryOne.rows[0].id;
@@ -396,7 +397,7 @@ async function payFees(req, res) {
       receipt_number,
       transactionId,
       feeId,
-      studentId[0].id
+      studentId[0].id,
     );
 
     if (result > 0) {
